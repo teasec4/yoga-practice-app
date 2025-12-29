@@ -5,7 +5,7 @@ import 'package:yoga_coach/features/practice/presentation/screens/practice_scree
 import 'package:yoga_coach/features/practice/presentation/screens/practice_detail_screen.dart';
 import 'package:yoga_coach/features/practice/presentation/screens/practice_playback_screen.dart';
 import 'package:yoga_coach/features/statistics/presentation/screens/statistics_screen.dart';
-import 'package:yoga_coach/features/settings/presentation/screens/settings_screen.dart';
+import 'package:yoga_coach/features/me/presentation/screens/me_screen.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/practice',
@@ -54,10 +54,10 @@ final goRouter = GoRouter(
           ),
         ),
         GoRoute(
-          path: '/settings',
-          name: 'settings',
+          path: '/me',
+          name: 'me',
           pageBuilder: (context, state) => NoTransitionPage(
-            child: const SettingsScreen(),
+            child: const MeScreen(),
           ),
         ),
       ],

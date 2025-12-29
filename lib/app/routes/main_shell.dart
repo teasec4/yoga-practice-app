@@ -13,7 +13,7 @@ class MainShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
     if (location.contains('/practice')) return 0;
     if (location.contains('/statistics')) return 1;
-    if (location.contains('/settings')) return 2;
+    if (location.contains('/me')) return 2;
     return 0;
   }
 
@@ -26,13 +26,13 @@ class MainShell extends StatelessWidget {
         onTap: (index) {
           switch (index) {
             case 0:
-              context.go('/practice');
+              context.goNamed('practice');
               break;
             case 1:
-              context.go('/statistics');
+              context.goNamed('statistics');
               break;
             case 2:
-              context.go('/settings');
+              context.goNamed('me');
               break;
           }
         },
@@ -42,12 +42,12 @@ class MainShell extends StatelessWidget {
             label: 'Practice',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Statistics',
+            icon: Icon(Icons.explore),
+            label: 'Explore',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: Icon(Icons.person),
+            label: 'Me',
           ),
         ],
       ),

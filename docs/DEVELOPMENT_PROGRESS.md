@@ -1,5 +1,44 @@
 # Yoga Coach - Development Progress
 
+## Session 3: Playback UI & Explore Feature (Dec 29, 2025)
+
+### ✅ Completed
+
+#### Practice Playback Screen Redesign
+- [x] Removed Stack-based positioning for Column layout
+- [x] Full-screen card centered without offsets
+- [x] Top Row: Close button + Counter (spaceBetween)
+- [x] Middle: Single card (Expanded)
+- [x] Bottom Row: Map button + Next/Done button
+- [x] Removed arrow navigation (← →)
+- [x] All transitions made instant (Duration.zero)
+- [x] Fadeout animation on close (200ms)
+- [x] PopScope to handle tab switching cleanup
+
+#### Timer & Progress System
+- [x] Timer controller with dynamic duration
+- [x] Linear progress bar at card bottom
+- [x] Play/Pause toggle with icon change
+- [x] Timer continues from paused state
+- [x] Progress bar visible even when empty (no jump)
+
+#### Navigation & Routing
+- [x] Removed all transitionsBuilder animations
+- [x] Instant navigation for all routes
+- [x] Fixed double-widget issue when switching tabs mid-playback
+- [x] Used goNamed() instead of go() for cleaner routing
+- [x] Auto-close playback screen when tab changes
+
+#### Explore Feature (Renamed from Statistics)
+- [x] Popular section with 3 mock workouts (horizontal scroll)
+- [x] Newest section with 3 mock workouts (horizontal scroll)
+- [x] "Look More" buttons for future expansion
+- [x] Consistent card design with icon + name + duration
+- [x] BottomBar icon changed to Icons.explore
+- [x] Standard AppBar styling
+
+---
+
 ## Session 2: Data Model & Practice Playback (Dec 29, 2025)
 
 ### ✅ Completed
@@ -23,12 +62,6 @@
 - [x] Maintained backward compatibility
 - [x] Clean separation of concerns
 
-#### Code Quality
-- [x] No compilation errors
-- [x] All tests pass
-- [x] Proper error handling
-- [x] Consistent naming conventions
-
 ---
 
 ## Session 1: App Skeleton & Core Features (Dec 29, 2025)
@@ -51,120 +84,90 @@
 
 #### Theme & Design
 - [x] Yoga-inspired color palette
-  - Soft Purple (primary)
-  - Soft Green (secondary)
-  - Warm Sand (tertiary)
-  - Soft Blue (accent)
 - [x] Light & Dark themes
 - [x] Google Fonts (Poppins) integration
 - [x] Elevated AppBar with shadow
 - [x] Complete typography system
-- [x] System preference detection for theme
 
 #### Features: Practice
 - [x] Practice list screen with 10 mock items
 - [x] Segmented navigation (Default Practice / My Practice)
-- [x] PracticeTile widget component
 - [x] Practice detail screen
-- [x] Practice entity & data model
-- [x] Difficulty level colors and badges
-- [x] Practice icons (10 different types)
-- [x] Duration and completion statistics
-- [x] Start Practice button
 - [x] Practice playback screen with full-screen cards
-- [x] Card navigation (next/previous arrows)
-- [x] Card counter (current / total)
-- [x] Auto-scroll toggle switch (optional)
+- [x] Card navigation with counter
+
+#### Features: Explore (formerly Statistics)
+- [x] Explore screen with Popular & Newest sections
+- [x] Horizontal scrolling workout cards
 
 #### Features: Settings
 - [x] Settings screen layout
-- [x] Notifications section (toggles)
-- [x] Account section (links)
-- [x] About section (info)
-- [x] Reusable tile components
-- [x] Toggle and menu item widgets
 
-#### Features: Statistics
-- [x] Statistics screen placeholder
+---
 
-#### Code Quality
-- [x] Proper naming conventions
-- [x] Reusable widgets
-- [x] Clean separation of concerns
-- [x] Mock data for easy testing
-- [x] Comprehensive documentation
+## 📋 Next Phase: Community & Customization
 
-### 📋 Todo
+### To Implement (Priority Order)
 
-#### Phase 2: State Management
-- [ ] Implement Riverpod for state management
-- [ ] Create providers for:
-  - Practice list state
-  - User practices state
-  - Settings preferences
-  - App theme state
-- [ ] Handle loading and error states
+#### Phase 1: User Profile (Me Tab)
+- [ ] Rename Settings to "Me"
+- [ ] Gamified profile with levels/XP system
+- [ ] User stats display (total practice time, streak, etc.)
+- [ ] Achievement badges
+- [ ] Leaderboard (future)
+- [ ] Profile customization
 
-#### Phase 3: Practice Playback
-- [x] Full-screen card display with navigation
-- [x] Next/previous card arrows
-- [x] Card counter
-- [x] Auto-scroll toggle (optional)
-- [ ] Timer/counter for poses
-- [ ] Audio playback for guidance
-- [ ] Progress tracking
-- [ ] Pose breakdown UI with images/video
+#### Phase 2: Practice Creation
+- [ ] Floating action button in "My Practice" tab
+- [ ] Add Lesson form screen
+  - [ ] Lesson name input
+  - [ ] Difficulty selector (Beginner/Intermediate/Advanced)
+  - [ ] Icon picker from available icons
+  - [ ] Movement selection from library
+  - [ ] Duration calculation
+  - [ ] Save draft option
+- [ ] Validation system
+- [ ] Success confirmation
 
-#### Phase 4: User Management
-- [ ] User authentication (Firebase)
-- [ ] User profile creation
-- [ ] Account management
-- [ ] Progress history
+#### Phase 3: Blocked Features
+- [ ] Feature lock system based on level/achievements
+- [ ] "Coming Soon" badges on unavailable features
+- [ ] Unlock conditions display
+- [ ] Progressive feature unlocking
 
-#### Phase 5: Practice Creation
-- [ ] UI for creating custom practices
-- [ ] Drag-and-drop pose sequencing
-- [ ] Duration input
-- [ ] Custom music/audio upload
-- [ ] Save to user library
+#### Phase 4: Explore Expansion
+- [ ] "Look More" navigation to full lists
+- [ ] Download/Install functionality
+- [ ] Featured section rotation
+- [ ] Search functionality
+- [ ] Filter by difficulty/duration
 
-#### Phase 6: Database & Backend
-- [ ] Firebase Firestore setup
-- [ ] User data persistence
-- [ ] Practice sync across devices
-- [ ] Cloud backup
+#### Phase 5: Social Features
+- [ ] Share practice with friends
+- [ ] Practice reviews/ratings
+- [ ] Community comments
+- [ ] Leaderboard integration
 
-#### Phase 7: Analytics & Notifications
-- [ ] Push notifications for reminders
-- [ ] Practice completion tracking
-- [ ] User engagement analytics
-- [ ] Weekly/monthly stats
+---
 
-#### Phase 8: Polish & Release
-- [ ] Animations (subtle, yoga-appropriate)
-- [ ] Unit tests
-- [ ] Widget tests
-- [ ] Integration tests
-- [ ] Performance optimization
-- [ ] Accessibility audit
-- [ ] App store preparation
-
-### 📊 Current Metrics
+## 📊 Current Metrics
 
 | Metric | Value |
 |--------|-------|
-| Total Features | 3 |
-| Screens | 6 |
-| Components | 3 |
-| Mock Data Items | 10 |
-| Color Schemes | 2 (Light/Dark) |
-| Routes | 5 |
-| Dependencies | 3 |
-| Lines of Code | ~2500 |
+| Total Screens | 7 |
+| Features | 3 (Practice, Explore, Settings) |
+| Routes | 5 main + nested |
+| Mock Practices | 10 |
+| Mock Movements | 73 |
+| Mock Workouts | 6 |
+| Components | 8+ |
+| Lines of Code | ~3500 |
 
-### 🎨 Design System
+---
 
-#### Color Palette
+## 🎨 Design System
+
+### Color Palette (Unchanged)
 ```
 Primary Light:    #9B7FB3 (Soft Purple)
 Primary Dark:     #7B5FA3 (Deep Purple)
@@ -178,22 +181,20 @@ Background Light: #FAF9F7 (Cream)
 Background Dark:  #1A1A1A (Almost Black)
 ```
 
-#### Typography
+### Typography (Unchanged)
 - Font Family: Poppins (Google Fonts)
 - Headline Large: 32px, Weight 700
 - Headline Medium: 24px, Weight 600
-- Headline Small: 20px, Weight 600
-- Body Large: 16px, Weight 400
 - Body Medium: 14px, Weight 400
 - Body Small: 12px, Weight 400
 
-### 📁 Project Structure
+---
+
+## 📁 Project Structure
 
 ```
 yoga_coach/
 ├── docs/
-│   ├── session_001_app_skeleton.md
-│   ├── session_001_final_summary.md
 │   ├── DEVELOPMENT_PROGRESS.md
 │   ├── product.md
 │   └── tech.md
@@ -202,67 +203,82 @@ yoga_coach/
 │   ├── app/
 │   │   ├── app.dart
 │   │   └── routes/
+│   │       ├── app_routes.dart
+│   │       ├── main_shell.dart
+│   │       └── transitions.dart
 │   ├── features/
 │   │   ├── practice/
+│   │   │   ├── domain/
+│   │   │   │   └── entities/
+│   │   │   ├── data/
+│   │   │   │   └── models/
+│   │   │   └── presentation/
+│   │   │       ├── screens/
+│   │   │       └── widgets/
 │   │   ├── statistics/
 │   │   └── settings/
 │   └── core/
 │       └── theme/
-├── test/
-├── android/
-├── ios/
-├── pubspec.yaml
-└── README.md
+└── pubspec.yaml
 ```
-
-### 🔄 Git Workflow
-
-All changes committed to main branch during development.
-
-Key commits:
-1. Initial project setup with clean architecture
-2. GoRouter navigation implementation
-3. Practice feature with mock data
-4. Settings screen implementation
-5. Theme & color system
-6. Google Fonts integration
-7. Refactor: Lessons → Practice
-
-### 💡 Key Decisions
-
-1. **Feature-Based Architecture**: Scales better for large projects
-2. **GoRouter**: Type-safe, modern, widely used
-3. **ShellRoute**: Persistent shell pattern is standard
-4. **No-Transition Navigation**: Faster, more responsive feel
-5. **Mock Data**: Easy to test without backend
-6. **Poppins Font**: Modern, clean, readable at all sizes
-7. **Yoga-Inspired Colors**: Niche appeal, cohesive brand
-
-### 🚀 Performance Notes
-
-- Uses `ListView.builder` for efficient list rendering
-- No animations initially (planned for later)
-- Theme colors applied globally
-- Minimal widget rebuilds with proper state management
-
-### 📚 References
-
-- Flutter: https://flutter.dev
-- GoRouter: https://pub.dev/packages/go_router
-- Google Fonts: https://fonts.google.com
-- Material 3: https://m3.material.io
-- Clean Architecture: https://researchgate.net/publication/307859127
-
-### 🎯 Next Session Goals
-
-1. Implement Riverpod state management
-2. Create practice playback screen
-3. Add smooth animations
-4. Setup Firebase backend integration
-5. Create user authentication flow
 
 ---
 
-**Last Updated**: Dec 29, 2025
-**Status**: 🟢 On Track
-**Estimated Completion**: 4-6 more sessions for MVP
+## 🔑 Key Decisions This Session
+
+1. **Column-based Layout**: Replaced Stack for better control and centering
+2. **Instant Navigation**: Removed all animations for snappier UX
+3. **Bottom Button Bar**: Better than floating buttons for two-action UI
+4. **PopScope**: Automatic cleanup when switching tabs
+5. **goNamed() over go()**: Type-safe route management
+6. **Explore Brand**: More engaging than "Statistics" for workout discovery
+
+---
+
+## 🚀 Performance Notes
+
+- No animations (by design for fast feedback)
+- Timer uses AnimationController for smooth progress
+- ListView.builder for efficient horizontal scrolling
+- PopScope prevents widget memory leaks
+
+---
+
+## 📚 App Structure
+
+### Bottom Navigation (3 Tabs)
+1. **Practice** - Default & My Practices with playback
+2. **Explore** - Popular & Newest workouts (downloadable)
+3. **Me** - User profile, achievements, settings (to implement)
+
+### Practice Tab
+- Default Practices: 10 curated routines
+- My Practices: User-created routines (will have add button)
+- Playback: Full-screen card interface with timer
+
+### Explore Tab
+- Popular section: Trending workouts
+- Newest section: Latest additions
+- Look More: Expansion points
+
+### Me Tab (Planned)
+- Profile section with avatar & stats
+- Gamification: Level, XP, Streak
+- Achievements: Unlocked badges
+- Settings: Preferences & notifications
+
+---
+
+## 🎯 Upcoming Priority
+
+1. **High**: Implement "Me" tab with gamification
+2. **High**: Add floating button to "My Practice" for lesson creation
+3. **High**: Create Add Lesson form
+4. **Medium**: Implement feature blocking system
+5. **Medium**: Expand Explore with search/filter
+
+---
+
+**Last Updated**: Dec 29, 2025  
+**Status**: 🟢 On Track  
+**Next Session Focus**: Me Tab + Practice Creation UI

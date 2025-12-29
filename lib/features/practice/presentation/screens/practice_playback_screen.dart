@@ -23,11 +23,13 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen>
   late AnimationController _enterAnimationController;
   late AnimationController _mapAnimationController;
   late AnimationController _timerAnimationController;
+  late AnimationController _closeAnimationController;
   late Animation<double> _cardFadeAnimation;
   late Animation<Offset> _cardSlideAnimation;
   late Animation<Offset> _enterSlideAnimation;
   late Animation<double> _enterOpacityAnimation;
   late Animation<Offset> _mapSlideAnimation;
+  late Animation<double> _closeOpacityAnimation;
   late bool _isTimerRunning;
   late double _timerProgress;
 
@@ -43,43 +45,43 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen>
 
     // Card switch animation
     _cardAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: Duration.zero,
       vsync: this,
     );
 
-    _cardFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _cardAnimationController, curve: Curves.easeIn),
+    _cardFadeAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(
+      CurvedAnimation(parent: _cardAnimationController, curve: Curves.linear),
     );
 
     _cardSlideAnimation =
-        Tween<Offset>(begin: const Offset(0.3, 0.0), end: Offset.zero).animate(
-      CurvedAnimation(parent: _cardAnimationController, curve: Curves.easeOut),
+        Tween<Offset>(begin: Offset.zero, end: Offset.zero).animate(
+      CurvedAnimation(parent: _cardAnimationController, curve: Curves.linear),
     );
 
     // Page enter animation
     _enterAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: Duration.zero,
       vsync: this,
     );
 
     _enterSlideAnimation =
-        Tween<Offset>(begin: const Offset(0.0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(parent: _enterAnimationController, curve: Curves.easeOut),
+        Tween<Offset>(begin: Offset.zero, end: Offset.zero).animate(
+      CurvedAnimation(parent: _enterAnimationController, curve: Curves.linear),
     );
 
-    _enterOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _enterAnimationController, curve: Curves.easeIn),
+    _enterOpacityAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(
+      CurvedAnimation(parent: _enterAnimationController, curve: Curves.linear),
     );
 
     // Map animation
     _mapAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 350),
+      duration: Duration.zero,
       vsync: this,
     );
 
     _mapSlideAnimation =
-        Tween<Offset>(begin: const Offset(0.0, 0.6), end: Offset.zero).animate(
-      CurvedAnimation(parent: _mapAnimationController, curve: Curves.easeOut),
+        Tween<Offset>(begin: Offset.zero, end: Offset.zero).animate(
+      CurvedAnimation(parent: _mapAnimationController, curve: Curves.linear),
     );
 
     // Timer animation
@@ -93,11 +95,17 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen>
       });
     });
 
-    Future.delayed(const Duration(milliseconds: 250), () {
-      if (mounted) {
-        _enterAnimationController.forward();
-      }
-    });
+    // Close animation
+    _closeAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+
+    _closeOpacityAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _closeAnimationController, curve: Curves.easeOut),
+    );
+
+    _enterAnimationController.forward();
   }
 
   void _toggleMovementMap() {
@@ -127,12 +135,27 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen>
     });
   }
 
+  void _closeScreen() {
+    _closeAnimationController.forward().then((_) {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  void _closeScreenWithoutAnimation() {
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   void dispose() {
     _cardAnimationController.dispose();
     _enterAnimationController.dispose();
     _mapAnimationController.dispose();
     _timerAnimationController.dispose();
+    _closeAnimationController.dispose();
     super.dispose();
   }
 
@@ -190,8 +213,6 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen>
     _cardAnimationController.reset();
     _cardAnimationController.forward();
   }
-
-
 
   Widget _buildMovementCard(
     BuildContext context,
@@ -302,17 +323,14 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen>
                           size: 20,
                         ),
                         const SizedBox(width: 8),
-                        SizedBox(
-                          width: 50,
-                          child: Text(
-                            _isTimerRunning
-                                ? 'Pause'
-                                : '${(durationSeconds / 60).toStringAsFixed(1)} min',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: colors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
+                        Text(
+                          _isTimerRunning
+                              ? 'Pause'
+                              : '${(durationSeconds / 60).toStringAsFixed(1)} min',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: colors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ],
                     ),
@@ -458,226 +476,217 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen>
   Widget build(BuildContext context) {
     final practice = _getPractice(widget.practiceId);
     final colors = Theme.of(context).colorScheme;
+    final isLastCard = _currentCardIndex >= _totalCards - 1;
 
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          _closeScreenWithoutAnimation();
+        }
+      },
+      child: Scaffold(
       backgroundColor: colors.primary.withOpacity(0.05),
       body: SafeArea(
-        child: Stack(
-          children: [
-            // Main Column Layout
-            SlideTransition(
-              position: _enterSlideAnimation,
-              child: Column(
-                children: [
-                  // Top Row - Close Button & Counter
-                  FadeTransition(
-                    opacity: _enterOpacityAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Close Button
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: colors.shadow.withOpacity(0.1),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          ),
-
-                          // Counter
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: colors.shadow.withOpacity(0.1),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              '${_currentCardIndex + 1} / $_totalCards',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.primary,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Middle Row - Left Arrow, Card, Right Arrow
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Left Arrow - Previous Card
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.shadow.withOpacity(0.1),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.chevron_left),
-                            iconSize: 32,
-                            onPressed: _currentCardIndex > 0 ? _previousCard : null,
-                            color: _currentCardIndex > 0
-                                ? colors.primary
-                                : colors.outline.withOpacity(0.3),
-                          ),
-                        ),
-
-                        // Center Card
-                        Expanded(
-                          child: Center(
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.75,
-                              constraints: const BoxConstraints(maxHeight: 400),
+        child: FadeTransition(
+          opacity: _closeOpacityAnimation,
+          child: Stack(
+            children: [
+              // Main Column Layout
+              SlideTransition(
+                position: _enterSlideAnimation,
+                child: Column(
+                  children: [
+                    // Top Row - Close Button & Counter
+                    FadeTransition(
+                      opacity: _enterOpacityAnimation,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Close Button
+                            Container(
                               decoration: BoxDecoration(
-                                color: colors.surface,
-                                borderRadius: BorderRadius.circular(24),
+                                color: Theme.of(context).scaffoldBackgroundColor,
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: colors.shadow.withOpacity(0.1),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 8),
+                                    blurRadius: 8,
                                   ),
                                 ],
                               ),
-                              child: _buildMovementCard(context, practice, colors),
+                              child: IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: _closeScreen,
+                              ),
                             ),
-                          ),
-                        ),
 
-                        // Right Arrow - Next Card
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.shadow.withOpacity(0.1),
-                                blurRadius: 8,
+                            // Counter
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).scaffoldBackgroundColor,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: colors.shadow.withOpacity(0.1),
+                                    blurRadius: 8,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.chevron_right),
-                            iconSize: 32,
-                            onPressed: _currentCardIndex < _totalCards - 1
-                                ? _nextCard
-                                : null,
-                            color: _currentCardIndex < _totalCards - 1
-                                ? colors.primary
-                                : colors.outline.withOpacity(0.3),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Bottom Row - Movement Map Button
-                  FadeTransition(
-                    opacity: _enterOpacityAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: GestureDetector(
-                        onTap: _toggleMovementMap,
-                        child: Container(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.shadow.withOpacity(0.1),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.map,
-                                color: colors.primary,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Movement Map',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
-                                    ?.copyWith(
-                                      color: colors.primary,
+                              child: Text(
+                                '${_currentCardIndex + 1} / $_totalCards',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
+                                      color: colors.primary,
                                     ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
 
-            // Movement Grid - Modal from Bottom
-            if (_showMovementMap)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Stack(
-                  children: [
-                    // Backdrop
-                    GestureDetector(
-                      onTap: _toggleMovementMap,
-                      child: Container(
-                        color: Colors.black.withOpacity(0.2),
+                    // Middle - Card
+                    Expanded(
+                      child: Center(
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.75,
+                          constraints: const BoxConstraints(maxHeight: 400),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colors.shadow.withOpacity(0.1),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: _buildMovementCard(context, practice, colors),
+                        ),
                       ),
                     ),
-                    // Grid Container - Bottom Sheet
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: SlideTransition(
-                        position: _mapSlideAnimation,
-                        child: _buildMovementGrid(practice, colors),
+
+                    // Bottom Row - Map Button & Next/Done Button
+                    FadeTransition(
+                      opacity: _enterOpacityAnimation,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Left Button - Movement Map
+                            GestureDetector(
+                              onTap: _toggleMovementMap,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).scaffoldBackgroundColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colors.shadow.withOpacity(0.1),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.map,
+                                      color: colors.primary,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Map',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: colors.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Right Button - Next/Done
+                            GestureDetector(
+                              onTap: isLastCard ? _closeScreen : _nextCard,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: colors.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colors.shadow.withOpacity(0.1),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  isLastCard ? 'DONE' : 'NEXT',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-          ],
+
+              // Movement Grid - Modal from Bottom
+              if (_showMovementMap)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Stack(
+                    children: [
+                      // Backdrop
+                      GestureDetector(
+                        onTap: _toggleMovementMap,
+                        child: Container(
+                          color: Colors.black.withOpacity(0.2),
+                        ),
+                      ),
+                      // Grid Container - Bottom Sheet
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: SlideTransition(
+                          position: _mapSlideAnimation,
+                          child: _buildMovementGrid(practice, colors),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
+      ),
       ),
     );
   }
