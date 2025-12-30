@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class MeScreen extends StatefulWidget {
   const MeScreen({super.key});
@@ -8,15 +9,27 @@ class MeScreen extends StatefulWidget {
 }
 
 class _MeScreenState extends State<MeScreen> {
-  bool _notificationsEnabled = true;
-  bool _soundEnabled = true;
+  void _openSettings(BuildContext context) {
+    context.pushNamed('settings');
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Me')),
+      appBar: AppBar(
+        title: const Text('Me'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'settings',
+            onPressed: () {
+              _openSettings(context);
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -27,61 +40,8 @@ class _MeScreenState extends State<MeScreen> {
               const SizedBox(height: 28),
               _buildAchievementsSection(colors),
               const SizedBox(height: 28),
+
               // Notifications Section
-              _buildSectionTitle('Notifications'),
-              const SizedBox(height: 12),
-              _buildToggleTile(
-                title: 'Reminders',
-                subtitle: 'Get notified about practice time',
-                value: _notificationsEnabled,
-                onChanged: (value) {
-                  setState(() => _notificationsEnabled = value);
-                },
-                colors: colors,
-              ),
-              _buildToggleTile(
-                title: 'Sound Effects',
-                subtitle: 'Play sounds during practice',
-                value: _soundEnabled,
-                onChanged: (value) {
-                  setState(() => _soundEnabled = value);
-                },
-                colors: colors,
-              ),
-              const SizedBox(height: 28),
-
-              // Account Section
-              _buildSectionTitle('Account'),
-              const SizedBox(height: 12),
-              _buildSettingsTile(
-                icon: Icons.person_outline,
-                title: 'Profile',
-                subtitle: 'Edit your profile information',
-                colors: colors,
-              ),
-              _buildSettingsTile(
-                icon: Icons.lock_outline,
-                title: 'Privacy & Security',
-                subtitle: 'Manage your privacy settings',
-                colors: colors,
-              ),
-              const SizedBox(height: 28),
-
-              // About Section
-              _buildSectionTitle('About'),
-              const SizedBox(height: 12),
-              _buildSettingsTile(
-                icon: Icons.info_outline,
-                title: 'About App',
-                subtitle: 'Version 1.0.0',
-                colors: colors,
-              ),
-              _buildSettingsTile(
-                icon: Icons.favorite_outline,
-                title: 'Rate Us',
-                subtitle: 'Leave a review on App Store',
-                colors: colors,
-              ),
             ],
           ),
         ),

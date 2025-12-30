@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yoga_coach/app/routes/main_shell.dart';
+import 'package:yoga_coach/features/me/presentation/screens/settings_screen.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 import 'package:yoga_coach/features/practice/presentation/screens/create_practice_screen.dart';
 import 'package:yoga_coach/features/practice/presentation/screens/practice_detail_screen.dart';
@@ -75,6 +76,19 @@ final goRouter = GoRouter(
           name: 'me',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: MeScreen()),
+          routes: [
+            GoRoute(
+              path: "settings",
+              name: "settings",
+              pageBuilder: (context, state) {
+                return MaterialPage(
+                  fullscreenDialog: true,
+                  child: SettingsScreen(),
+                );
+            } 
+                
+            ),
+          ]
         ),
       ],
     ),
