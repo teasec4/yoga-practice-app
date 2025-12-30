@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yoga_coach/features/practice/data/repositories/practice_repository.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
+import 'package:yoga_coach/features/practice/domain/repositories/practice_repo.dart';
 
 abstract class PlaybackState {}
 
@@ -30,7 +31,7 @@ class PlaybackError extends PlaybackState {
 
 class PlaybackCubit extends Cubit<PlaybackState> {
   final String practiceId;
-  final PracticeRepository repository;
+  final PracticeRepo repository;
 
   PlaybackCubit({required this.practiceId, required this.repository})
     : super(PlaybackInitial()) {
