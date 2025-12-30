@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:yoga_coach/core/data/app_content.dart';
-import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:yoga_coach/features/practice/bloc/practice_bloc.dart';
 
-class CreateCustomPracticeScreen extends StatefulWidget {
-  final CustomPractice? editingPractice;
+class CreatePracticeScreen extends StatefulWidget {
+  final Practice? editingPractice;
 
-  const CreateCustomPracticeScreen({this.editingPractice, super.key});
+  const CreatePracticeScreen({this.editingPractice, super.key});
 
   @override
-  State<CreateCustomPracticeScreen> createState() =>
-      _CreateCustomPracticeScreenState();
+  State<CreatePracticeScreen> createState() =>
+      _CreatePracticeScreenState();
 }
 
-class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
+class _CreatePracticeScreenState extends State<CreatePracticeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _nameController = TextEditingController();
@@ -28,7 +28,6 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     
-    // Если редактируем существующую тренировку
     if (widget.editingPractice != null) {
       final practice = widget.editingPractice!;
       _nameController.text = practice.title;
@@ -75,16 +74,17 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
       return;
     }
 
-    final customPractice = CustomPractice(
+    final practice = Practice(
       id: widget.editingPractice?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: _nameController.text,
       movements: _selectedMovements,
       createdAt: widget.editingPractice?.createdAt ?? DateTime.now(),
       difficulty: _selectedDifficulty,
       durationMultiplier: _selectedMultiplier,
+      isCustom: true,
     );
 
-    context.pop(customPractice);
+    context.pop(practice);
   }
 
   Color _getDifficultyColor(DifficultyLevel level) {
@@ -130,20 +130,18 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
       ),
       body: Column(
         children: [
-          // Compact Top section: Name and Settings
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: colors.surface,
               border: Border(
                 bottom: BorderSide(
-                  color: colors.outline.withValues(alpha: 0.1),
+                  color: colors.outline.withOpacity(0.1),
                 ),
               ),
             ),
             child: Column(
               children: [
-                // Name Input
                 TextField(
                   controller: _nameController,
                   decoration: InputDecoration(
@@ -161,12 +159,10 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 8),
-
-                // Difficulty Selector
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.05),
+                    color: colors.primary.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(
@@ -203,7 +199,7 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
                                           ? _getDifficultyColor(difficulty)
                                           : _getDifficultyColor(
                                               difficulty,
-                                            ).withValues(alpha: 0.1),
+                                            ).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
                                         color: _selectedDifficulty == difficulty
@@ -240,12 +236,10 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-
-                // Duration Multiplier Selector
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: colors.secondary.withValues(alpha: 0.05),
+                    color: colors.secondary.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(
@@ -280,8 +274,8 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
                                     decoration: BoxDecoration(
                                       color: _selectedMultiplier == multiplier
                                           ? colors.secondary
-                                          : colors.secondary.withValues(
-                                              alpha: 0.1,
+                                          : colors.secondary.withOpacity(
+                                              0.1,
                                             ),
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
@@ -319,15 +313,13 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
               ],
             ),
           ),
-
-          // Compact Summary Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.05),
+              color: colors.primary.withOpacity(0.05),
               border: Border(
                 bottom: BorderSide(
-                  color: colors.outline.withValues(alpha: 0.1),
+                  color: colors.outline.withOpacity(0.1),
                 ),
               ),
             ),
@@ -371,8 +363,6 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
               ],
             ),
           ),
-
-          // Tab Bar
           TabBar(
             controller: _tabController,
             labelColor: colors.primary,
@@ -383,8 +373,6 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
               Tab(text: 'Selected Poses'),
             ],
           ),
-
-          // Tab Content
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -394,8 +382,6 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
               ],
             ),
           ),
-
-          // Create Button
           Padding(
             padding: const EdgeInsets.all(12),
             child: SizedBox(
@@ -418,135 +404,128 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
 
   Widget _buildAvailablePosesTab(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
-    // Group movements by practice
-    final Map<String, (String title, List<Movement> movements)>
-    groupedMovements = {};
-    for (final practice in standardPractices) {
-      groupedMovements[practice.id] = (
-        practice.title,
-        availableMovements
-            .where((m) => m.id.startsWith('${practice.id}-'))
-            .toList(),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      itemCount: groupedMovements.length,
-      itemBuilder: (context, index) {
-        final practiceId = groupedMovements.keys.elementAt(index);
-        final (title, movements) = groupedMovements[practiceId]!;
-
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 6),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colors.primary,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
-            ...movements.map((movement) {
-              final isSelected = _selectedMovementIds.contains(movement.id);
-              final order = isSelected
-                  ? _selectedMovements.indexOf(movement) + 1
-                  : null;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: InkWell(
-                  onTap: () => _toggleMovement(movement),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? colors.primary.withValues(alpha: 0.05)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected
-                            ? colors.primary.withValues(alpha: 0.3)
-                            : colors.outline.withValues(alpha: 0.15),
-                        width: 1.5,
+    return BlocBuilder<PracticeBloc, PracticeState>(
+      builder: (context, state) {
+        if (state is PracticeLoaded) {
+          final practices = state.practices.where((p) => !p.isCustom).toList();
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            itemCount: practices.length,
+            itemBuilder: (context, index) {
+              final practice = practices[index];
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 6),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        practice.title,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colors.primary,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        if (isSelected)
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: colors.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '$order',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: Icon(
-                              Icons.add_circle_outline,
-                              color: colors.outline.withValues(alpha: 0.4),
-                              size: 24,
+                  ),
+                  ...practice.movements.map((movement) {
+                    final isSelected = _selectedMovementIds.contains(movement.id);
+                    final order = isSelected
+                        ? _selectedMovements.indexOf(movement) + 1
+                        : null;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: InkWell(
+                        onTap: () => _toggleMovement(movement),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? colors.primary.withOpacity(0.05)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? colors.primary.withOpacity(0.3)
+                                  : colors.outline.withOpacity(0.15),
+                              width: 1.5,
                             ),
                           ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text(
-                                movement.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13,
+                              if (isSelected)
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: colors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '$order',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              else
+                                SizedBox(
+                                  width: 32,
+                                  height: 32,
+                                  child: Icon(
+                                    Icons.add_circle_outline,
+                                    color: colors.outline.withOpacity(0.4),
+                                    size: 24,
+                                  ),
+                                ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      movement.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${movement.durationSeconds}s',
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Text(
-                                '${movement.durationSeconds}s',
-                                style: Theme.of(context).textTheme.bodySmall,
+                              const SizedBox(width: 8),
+                              Icon(
+                                isSelected
+                                    ? Icons.check_circle
+                                    : Icons.circle_outlined,
+                                color: isSelected
+                                    ? colors.primary
+                                    : colors.outline.withOpacity(0.4),
+                                size: 22,
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          isSelected
-                              ? Icons.check_circle
-                              : Icons.circle_outlined,
-                          color: isSelected
-                              ? colors.primary
-                              : colors.outline.withValues(alpha: 0.4),
-                          size: 22,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 6),
+                ],
               );
-            }),
-            const SizedBox(height: 6),
-          ],
-        );
+            },
+          );
+        }
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }
@@ -562,20 +541,20 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
             Icon(
               Icons.inbox,
               size: 48,
-              color: colors.outline.withValues(alpha: 0.3),
+              color: colors.outline.withOpacity(0.3),
             ),
             const SizedBox(height: 16),
             Text(
               'No poses selected',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: colors.outline.withValues(alpha: 0.5),
+                color: colors.outline.withOpacity(0.5),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Add poses from the "Available Poses" tab',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colors.outline.withValues(alpha: 0.5),
+                color: colors.outline.withOpacity(0.5),
               ),
             ),
           ],
@@ -593,13 +572,12 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.05),
+              color: colors.primary.withOpacity(0.05),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: colors.outline.withValues(alpha: 0.15)),
+              border: Border.all(color: colors.outline.withOpacity(0.15)),
             ),
             child: Row(
               children: [
-                // Number Badge
                 Container(
                   width: 32,
                   height: 32,
@@ -619,8 +597,6 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
                   ),
                 ),
                 const SizedBox(width: 10),
-
-                // Movement Info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -641,8 +617,6 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
                     ],
                   ),
                 ),
-
-                // Duration and Remove Button
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [

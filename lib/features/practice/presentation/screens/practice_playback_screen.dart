@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:yoga_coach/core/di/service_locator.dart';
+import 'package:yoga_coach/features/practice/bloc/playback_cubit.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
-import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
-import 'package:yoga_coach/features/practice/data/models/practice_model.dart';
-import 'package:yoga_coach/features/practice/data/repositories/custom_practice_repository.dart';
-import 'package:yoga_coach/features/practice/data/database/drift_database.dart';
 
 class PracticePlaybackScreen extends StatefulWidget {
   final String practiceId;
-  final bool isCustom;
 
   const PracticePlaybackScreen({
     required this.practiceId,
-    this.isCustom = false,
     super.key,
   });
 
@@ -20,55 +18,12 @@ class PracticePlaybackScreen extends StatefulWidget {
 }
 
 class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
-  late int _currentCardIndex;
-  late int _totalCards;
-  late bool _showMovementMap;
-  late int _durationMultiplier;
-  late Future<List<Movement>> _movementsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentCardIndex = 0;
-    _showMovementMap = false;
-    _durationMultiplier = 1;
-    _movementsFuture = _loadMovements();
-  }
-
-  Future<List<Movement>> _loadMovements() async {
-    if (widget.isCustom) {
-      final database = AppDatabase();
-      final repository = CustomPracticeRepository(database: database);
-      final practice = await repository.getPracticeById(widget.practiceId);
-      if (practice != null) {
-        _durationMultiplier = practice.durationMultiplier.value;
-        _totalCards = practice.movements.length;
-        return practice.movements;
-      }
-    } else {
-      try {
-        final practice = mockPractices.firstWhere((p) => p.id == widget.practiceId);
-        _totalCards = practice.movements.length;
-        return practice.movements;
-      } catch (e) {
-        return [];
-      }
-    }
-    return [];
-  }
+  bool _showMovementMap = false;
 
   void _toggleMovementMap() {
     setState(() {
       _showMovementMap = !_showMovementMap;
     });
-  }
-
-  void _nextCard() {
-    if (_currentCardIndex < _totalCards - 1) {
-      setState(() {
-        _currentCardIndex++;
-      });
-    }
   }
 
   void _closeScreen() {
@@ -77,57 +32,68 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
     }
   }
 
-  IconData _getIconData(IconType type) {
-    switch (type) {
-      case IconType.lotus:
-        return Icons.self_improvement;
-      case IconType.tree:
-        return Icons.nature;
-      case IconType.warrior:
-        return Icons.sports_martial_arts;
-      case IconType.downward:
-        return Icons.trending_down;
-      case IconType.meditation:
-        return Icons.spa;
-      case IconType.breathing:
-        return Icons.air;
-      case IconType.flexibility:
-        return Icons.accessibility;
-      case IconType.strength:
-        return Icons.fitness_center;
-      case IconType.balance:
-        return Icons.hub;
-      case IconType.relaxation:
-        return Icons.cloud;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Movement>>(
-      future: _movementsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    return BlocProvider(
+      create: (context) => createPlaybackCubit(widget.practiceId),
+      child: BlocBuilder<PlaybackCubit, PlaybackState>(
+        builder: (context, state) {
+          if (state is PlaybackLoading) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Practice')),
+              body: const Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          if (state is PlaybackLoaded) {
+            final colors = Theme.of(context).colorScheme;
+            final movement = state.movements[state.currentIndex];
+            final isLastCard =
+                state.currentIndex >= state.movements.length - 1;
+
+            return _buildPlaybackScreen(
+              context,
+              colors,
+              movement,
+              isLastCard,
+              state.movements,
+              state.currentIndex,
+              state.durationMultiplier,
+            );
+          }
+
+          if (state is PlaybackFinished) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Practice Finished')),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Practice Finished!'),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _closeScreen,
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (state is PlaybackError) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: Center(child: Text(state.message)),
+            );
+          }
+
           return Scaffold(
             appBar: AppBar(title: const Text('Practice')),
-            body: const Center(child: CircularProgressIndicator()),
+            body: const Center(child: Text('Something went wrong')),
           );
-        }
-
-        final movements = snapshot.data ?? [];
-        if (movements.isEmpty || _totalCards == 0) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Practice')),
-            body: const Center(child: Text('No movements found')),
-          );
-        }
-
-        final colors = Theme.of(context).colorScheme;
-        final movement = movements[_currentCardIndex];
-        final isLastCard = _currentCardIndex >= _totalCards - 1;
-        
-        return _buildPlaybackScreen(context, colors, movement, isLastCard, movements);
-      },
+        },
+      ),
     );
   }
 
@@ -137,344 +103,338 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
     Movement movement,
     bool isLastCard,
     List<Movement> movements,
+    int currentCardIndex,
+    int durationMultiplier,
   ) {
     return Scaffold(
       backgroundColor: colors.primary.withOpacity(0.05),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Main Content
-            Column(
-              children: [
-                // Top Row - Close Button & Counter
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Close Button
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: colors.shadow.withOpacity(0.1),
-                              blurRadius: 8,
-                            ),
-                          ],
+      appBar: AppBar(
+        backgroundColor: colors.primary.withOpacity(0.05),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: _closeScreen,
+        ),
+        title: Text(
+          '${currentCardIndex + 1}/${movements.length}',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarBrightness:
+              Theme.of(context).brightness == Brightness.light
+                  ? Brightness.light
+                  : Brightness.dark,
+          statusBarIconBrightness:
+              Theme.of(context).brightness == Brightness.light
+                  ? Brightness.dark
+                  : Brightness.light,
+        ),
+      ),
+      body: Stack(
+        children: [
+          // Main Content
+          Column(
+            children: [
+              // Middle - Card
+              Expanded(
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.75,
+                    constraints: const BoxConstraints(maxHeight: 400),
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.shadow.withOpacity(0.1),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
                         ),
-                        child: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: _closeScreen,
-                        ),
-                      ),
-                      // Counter
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: colors.shadow.withOpacity(0.1),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          '${_currentCardIndex + 1} / $_totalCards',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: colors.primary,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Middle - Card
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.75,
-                      constraints: const BoxConstraints(maxHeight: 400),
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors.shadow.withOpacity(0.1),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Top - Movement Name
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            child: Text(
-                              movement.name,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-
-                          // Middle - Icon & Description
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // Icon
-                                Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    color: colors.primary.withOpacity(0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.self_improvement,
-                                    size: 40,
-                                    color: colors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                // Description
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  child: Text(
-                                    movement.description,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Bottom - Duration
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: colors.primary.withOpacity(0.05),
-                              borderRadius: const BorderRadius.only(
-                                bottomLeft: Radius.circular(24),
-                                bottomRight: Radius.circular(24),
-                              ),
-                            ),
-                            child: Column(
-                               children: [
-                                 Text(
-                                   'Duration',
-                                   style: Theme.of(context).textTheme.labelSmall,
-                                 ),
-                                 Text(
-                                   '${movement.durationSeconds * _durationMultiplier}s',
-                                   style: Theme.of(context).textTheme.titleMedium
-                                       ?.copyWith(
-                                         color: colors.primary,
-                                         fontWeight: FontWeight.w600,
-                                       ),
-                                 ),
-                               ],
-                             ),
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
-                  ),
-                ),
-
-                // Bottom Row - Map Button & Next/Done Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Left Button - Movement Map
-                      GestureDetector(
-                        onTap: _toggleMovementMap,
-                        child: Container(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Top - Movement Name
+                        Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
+                            horizontal: 16,
                             vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.shadow.withOpacity(0.1),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.map, color: colors.primary, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Map',
-                                style: Theme.of(context).textTheme.labelMedium
-                                    ?.copyWith(
-                                      color: colors.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Right Button - Next/Done
-                      GestureDetector(
-                        onTap: isLastCard ? _closeScreen : _nextCard,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.primary,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.shadow.withOpacity(0.1),
-                                blurRadius: 8,
-                              ),
-                            ],
                           ),
                           child: Text(
-                            isLastCard ? 'DONE' : 'NEXT',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                            movement.name,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+
+                        // Middle - Icon & Description
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Icon
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: colors.primary.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.self_improvement,
+                                  size: 40,
+                                  color: colors.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              // Description
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  movement.description,
+                                  style:
+                                      Theme.of(context).textTheme.bodyMedium,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Bottom - Duration
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colors.primary.withOpacity(0.05),
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
                             ),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            // Movement Grid Modal (if visible)
-            if (_showMovementMap)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onTap: _toggleMovementMap,
-                  child: Container(
-                    color: Colors.black.withOpacity(0.3),
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: () {}, // Prevent dismiss when tapping grid
-                        child: Container(
-                          margin: const EdgeInsets.all(24),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: colors.surface,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: GridView.builder(
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  mainAxisSpacing: 12,
-                                  crossAxisSpacing: 12,
-                                ),
-                            itemCount: movements.length,
-                            itemBuilder: (context, index) {
-                              final isActive = index == _currentCardIndex;
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _currentCardIndex = index;
-                                    _showMovementMap = false;
-                                  });
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: isActive
-                                        ? colors.primary
-                                        : colors.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: colors.outline.withOpacity(0.2),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Duration',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              Text(
+                                '${movement.durationSeconds * durationMultiplier}s',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      color: colors.primary,
                                     ),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        '${index + 1}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall
-                                            ?.copyWith(
-                                              color: isActive
-                                                  ? Colors.white
-                                                  : colors.primary,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        movements[index].name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              color: isActive
-                                                  ? Colors.white
-                                                  : colors.onSurface,
-                                              fontSize: 10,
-                                            ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                              ),
+                            ],
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
               ),
-          ],
+
+              // Bottom Navigation
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Previous Button
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: currentCardIndex > 0
+                            ? () {
+                                context
+                                    .read<PlaybackCubit>()
+                                    .selectMovement(currentCardIndex - 1);
+                              }
+                            : null,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(
+                            color: currentCardIndex > 0
+                                ? colors.primary
+                                : colors.outline.withOpacity(0.3),
+                          ),
+                        ),
+                        child: const Icon(Icons.arrow_back),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Map Button
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _toggleMovementMap,
+                        icon: const Icon(Icons.list),
+                        label: const Text('Map'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: colors.primary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Next Button
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: !isLastCard
+                            ? () {
+                                context
+                                    .read<PlaybackCubit>()
+                                    .nextMovement();
+                              }
+                            : () {
+                                Navigator.of(context).pop();
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isLastCard ? Colors.green : colors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Icon(
+                          isLastCard ? Icons.check : Icons.arrow_forward,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Movement Map Overlay
+          if (_showMovementMap)
+            _buildMovementMapOverlay(
+              context,
+              colors,
+              movements,
+              currentCardIndex,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMovementMapOverlay(
+    BuildContext context,
+    ColorScheme colors,
+    List<Movement> movements,
+    int currentCardIndex,
+  ) {
+    return GestureDetector(
+      onTap: _toggleMovementMap,
+      child: Container(
+        color: Colors.black.withOpacity(0.5),
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Movement Sequence',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: movements.length,
+                    itemBuilder: (context, index) {
+                      final isSelected = index == currentCardIndex;
+                      return GestureDetector(
+                        onTap: () {
+                          context
+                              .read<PlaybackCubit>()
+                              .selectMovement(index);
+                          _toggleMovementMap();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? colors.primary.withOpacity(0.2)
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: isSelected
+                                  ? colors.primary
+                                  : colors.outline.withOpacity(0.3),
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isSelected
+                                      ? colors.primary
+                                      : colors.outline.withOpacity(0.3),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : colors.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      movements[index].name,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    Text(
+                                      '${movements[index].durationSeconds}s',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

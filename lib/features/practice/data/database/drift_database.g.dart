@@ -3,12 +3,12 @@
 part of 'drift_database.dart';
 
 // ignore_for_file: type=lint
-class $CustomPracticesTable extends CustomPractices
-    with TableInfo<$CustomPracticesTable, CustomPracticeEntity> {
+class $PracticesTable extends Practices
+    with TableInfo<$PracticesTable, PracticeEntity> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $CustomPracticesTable(this.attachedDatabase, [this._alias]);
+  $PracticesTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -27,6 +27,28 @@ class $CustomPracticesTable extends CustomPractices
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fullDescriptionMeta = const VerificationMeta(
+    'fullDescription',
+  );
+  @override
+  late final GeneratedColumn<String> fullDescription = GeneratedColumn<String>(
+    'full_description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _difficultyMeta = const VerificationMeta(
     'difficulty',
   );
@@ -36,6 +58,28 @@ class $CustomPracticesTable extends CustomPractices
     aliasedName,
     false,
     type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconTypeMeta = const VerificationMeta(
+    'iconType',
+  );
+  @override
+  late final GeneratedColumn<String> iconType = GeneratedColumn<String>(
+    'icon_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _durationMultiplierMeta =
@@ -49,33 +93,40 @@ class $CustomPracticesTable extends CustomPractices
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
+  static const VerificationMeta _isCustomMeta = const VerificationMeta(
+    'isCustom',
   );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
+  late final GeneratedColumn<bool> isCustom = GeneratedColumn<bool>(
+    'is_custom',
     aliasedName,
     false,
-    type: DriftSqlType.dateTime,
+    type: DriftSqlType.bool,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_custom" IN (0, 1))',
+    ),
   );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     title,
+    description,
+    fullDescription,
     difficulty,
-    durationMultiplier,
+    iconType,
     createdAt,
+    durationMultiplier,
+    isCustom,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'custom_practices';
+  static const String $name = 'practices';
   @override
   VerificationContext validateIntegrity(
-    Insertable<CustomPracticeEntity> instance, {
+    Insertable<PracticeEntity> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -93,6 +144,24 @@ class $CustomPracticesTable extends CustomPractices
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('full_description')) {
+      context.handle(
+        _fullDescriptionMeta,
+        fullDescription.isAcceptableOrUnknown(
+          data['full_description']!,
+          _fullDescriptionMeta,
+        ),
+      );
+    }
     if (data.containsKey('difficulty')) {
       context.handle(
         _difficultyMeta,
@@ -100,6 +169,20 @@ class $CustomPracticesTable extends CustomPractices
       );
     } else if (isInserting) {
       context.missing(_difficultyMeta);
+    }
+    if (data.containsKey('icon_type')) {
+      context.handle(
+        _iconTypeMeta,
+        iconType.isAcceptableOrUnknown(data['icon_type']!, _iconTypeMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
     }
     if (data.containsKey('duration_multiplier')) {
       context.handle(
@@ -112,13 +195,13 @@ class $CustomPracticesTable extends CustomPractices
     } else if (isInserting) {
       context.missing(_durationMultiplierMeta);
     }
-    if (data.containsKey('created_at')) {
+    if (data.containsKey('is_custom')) {
       context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+        _isCustomMeta,
+        isCustom.isAcceptableOrUnknown(data['is_custom']!, _isCustomMeta),
       );
     } else if (isInserting) {
-      context.missing(_createdAtMeta);
+      context.missing(_isCustomMeta);
     }
     return context;
   }
@@ -126,9 +209,9 @@ class $CustomPracticesTable extends CustomPractices
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  CustomPracticeEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+  PracticeEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return CustomPracticeEntity(
+    return PracticeEntity(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -137,75 +220,122 @@ class $CustomPracticesTable extends CustomPractices
         DriftSqlType.string,
         data['${effectivePrefix}title'],
       )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      fullDescription: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}full_description'],
+      ),
       difficulty: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}difficulty'],
+      )!,
+      iconType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_type'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
       )!,
       durationMultiplier: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}duration_multiplier'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
+      isCustom: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_custom'],
       )!,
     );
   }
 
   @override
-  $CustomPracticesTable createAlias(String alias) {
-    return $CustomPracticesTable(attachedDatabase, alias);
+  $PracticesTable createAlias(String alias) {
+    return $PracticesTable(attachedDatabase, alias);
   }
 }
 
-class CustomPracticeEntity extends DataClass
-    implements Insertable<CustomPracticeEntity> {
+class PracticeEntity extends DataClass implements Insertable<PracticeEntity> {
   final String id;
   final String title;
+  final String? description;
+  final String? fullDescription;
   final String difficulty;
-  final String durationMultiplier;
+  final String? iconType;
   final DateTime createdAt;
-  const CustomPracticeEntity({
+  final String durationMultiplier;
+  final bool isCustom;
+  const PracticeEntity({
     required this.id,
     required this.title,
+    this.description,
+    this.fullDescription,
     required this.difficulty,
-    required this.durationMultiplier,
+    this.iconType,
     required this.createdAt,
+    required this.durationMultiplier,
+    required this.isCustom,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || fullDescription != null) {
+      map['full_description'] = Variable<String>(fullDescription);
+    }
     map['difficulty'] = Variable<String>(difficulty);
-    map['duration_multiplier'] = Variable<String>(durationMultiplier);
+    if (!nullToAbsent || iconType != null) {
+      map['icon_type'] = Variable<String>(iconType);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['duration_multiplier'] = Variable<String>(durationMultiplier);
+    map['is_custom'] = Variable<bool>(isCustom);
     return map;
   }
 
-  CustomPracticesCompanion toCompanion(bool nullToAbsent) {
-    return CustomPracticesCompanion(
+  PracticesCompanion toCompanion(bool nullToAbsent) {
+    return PracticesCompanion(
       id: Value(id),
       title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      fullDescription: fullDescription == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fullDescription),
       difficulty: Value(difficulty),
-      durationMultiplier: Value(durationMultiplier),
+      iconType: iconType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(iconType),
       createdAt: Value(createdAt),
+      durationMultiplier: Value(durationMultiplier),
+      isCustom: Value(isCustom),
     );
   }
 
-  factory CustomPracticeEntity.fromJson(
+  factory PracticeEntity.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return CustomPracticeEntity(
+    return PracticeEntity(
       id: serializer.fromJson<String>(json['id']),
       title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      fullDescription: serializer.fromJson<String?>(json['fullDescription']),
       difficulty: serializer.fromJson<String>(json['difficulty']),
+      iconType: serializer.fromJson<String?>(json['iconType']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       durationMultiplier: serializer.fromJson<String>(
         json['durationMultiplier'],
       ),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      isCustom: serializer.fromJson<bool>(json['isCustom']),
     );
   }
   @override
@@ -214,124 +344,192 @@ class CustomPracticeEntity extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'fullDescription': serializer.toJson<String?>(fullDescription),
       'difficulty': serializer.toJson<String>(difficulty),
-      'durationMultiplier': serializer.toJson<String>(durationMultiplier),
+      'iconType': serializer.toJson<String?>(iconType),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'durationMultiplier': serializer.toJson<String>(durationMultiplier),
+      'isCustom': serializer.toJson<bool>(isCustom),
     };
   }
 
-  CustomPracticeEntity copyWith({
+  PracticeEntity copyWith({
     String? id,
     String? title,
+    Value<String?> description = const Value.absent(),
+    Value<String?> fullDescription = const Value.absent(),
     String? difficulty,
-    String? durationMultiplier,
+    Value<String?> iconType = const Value.absent(),
     DateTime? createdAt,
-  }) => CustomPracticeEntity(
+    String? durationMultiplier,
+    bool? isCustom,
+  }) => PracticeEntity(
     id: id ?? this.id,
     title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    fullDescription: fullDescription.present
+        ? fullDescription.value
+        : this.fullDescription,
     difficulty: difficulty ?? this.difficulty,
-    durationMultiplier: durationMultiplier ?? this.durationMultiplier,
+    iconType: iconType.present ? iconType.value : this.iconType,
     createdAt: createdAt ?? this.createdAt,
+    durationMultiplier: durationMultiplier ?? this.durationMultiplier,
+    isCustom: isCustom ?? this.isCustom,
   );
-  CustomPracticeEntity copyWithCompanion(CustomPracticesCompanion data) {
-    return CustomPracticeEntity(
+  PracticeEntity copyWithCompanion(PracticesCompanion data) {
+    return PracticeEntity(
       id: data.id.present ? data.id.value : this.id,
       title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      fullDescription: data.fullDescription.present
+          ? data.fullDescription.value
+          : this.fullDescription,
       difficulty: data.difficulty.present
           ? data.difficulty.value
           : this.difficulty,
+      iconType: data.iconType.present ? data.iconType.value : this.iconType,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       durationMultiplier: data.durationMultiplier.present
           ? data.durationMultiplier.value
           : this.durationMultiplier,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      isCustom: data.isCustom.present ? data.isCustom.value : this.isCustom,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('CustomPracticeEntity(')
+    return (StringBuffer('PracticeEntity(')
           ..write('id: $id, ')
           ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('fullDescription: $fullDescription, ')
           ..write('difficulty: $difficulty, ')
+          ..write('iconType: $iconType, ')
+          ..write('createdAt: $createdAt, ')
           ..write('durationMultiplier: $durationMultiplier, ')
-          ..write('createdAt: $createdAt')
+          ..write('isCustom: $isCustom')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, difficulty, durationMultiplier, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    fullDescription,
+    difficulty,
+    iconType,
+    createdAt,
+    durationMultiplier,
+    isCustom,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is CustomPracticeEntity &&
+      (other is PracticeEntity &&
           other.id == this.id &&
           other.title == this.title &&
+          other.description == this.description &&
+          other.fullDescription == this.fullDescription &&
           other.difficulty == this.difficulty &&
+          other.iconType == this.iconType &&
+          other.createdAt == this.createdAt &&
           other.durationMultiplier == this.durationMultiplier &&
-          other.createdAt == this.createdAt);
+          other.isCustom == this.isCustom);
 }
 
-class CustomPracticesCompanion extends UpdateCompanion<CustomPracticeEntity> {
+class PracticesCompanion extends UpdateCompanion<PracticeEntity> {
   final Value<String> id;
   final Value<String> title;
+  final Value<String?> description;
+  final Value<String?> fullDescription;
   final Value<String> difficulty;
-  final Value<String> durationMultiplier;
+  final Value<String?> iconType;
   final Value<DateTime> createdAt;
+  final Value<String> durationMultiplier;
+  final Value<bool> isCustom;
   final Value<int> rowid;
-  const CustomPracticesCompanion({
+  const PracticesCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.fullDescription = const Value.absent(),
     this.difficulty = const Value.absent(),
-    this.durationMultiplier = const Value.absent(),
+    this.iconType = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.durationMultiplier = const Value.absent(),
+    this.isCustom = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  CustomPracticesCompanion.insert({
+  PracticesCompanion.insert({
     required String id,
     required String title,
+    this.description = const Value.absent(),
+    this.fullDescription = const Value.absent(),
     required String difficulty,
-    required String durationMultiplier,
+    this.iconType = const Value.absent(),
     required DateTime createdAt,
+    required String durationMultiplier,
+    required bool isCustom,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
        difficulty = Value(difficulty),
+       createdAt = Value(createdAt),
        durationMultiplier = Value(durationMultiplier),
-       createdAt = Value(createdAt);
-  static Insertable<CustomPracticeEntity> custom({
+       isCustom = Value(isCustom);
+  static Insertable<PracticeEntity> custom({
     Expression<String>? id,
     Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? fullDescription,
     Expression<String>? difficulty,
-    Expression<String>? durationMultiplier,
+    Expression<String>? iconType,
     Expression<DateTime>? createdAt,
+    Expression<String>? durationMultiplier,
+    Expression<bool>? isCustom,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (fullDescription != null) 'full_description': fullDescription,
       if (difficulty != null) 'difficulty': difficulty,
-      if (durationMultiplier != null) 'duration_multiplier': durationMultiplier,
+      if (iconType != null) 'icon_type': iconType,
       if (createdAt != null) 'created_at': createdAt,
+      if (durationMultiplier != null) 'duration_multiplier': durationMultiplier,
+      if (isCustom != null) 'is_custom': isCustom,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  CustomPracticesCompanion copyWith({
+  PracticesCompanion copyWith({
     Value<String>? id,
     Value<String>? title,
+    Value<String?>? description,
+    Value<String?>? fullDescription,
     Value<String>? difficulty,
-    Value<String>? durationMultiplier,
+    Value<String?>? iconType,
     Value<DateTime>? createdAt,
+    Value<String>? durationMultiplier,
+    Value<bool>? isCustom,
     Value<int>? rowid,
   }) {
-    return CustomPracticesCompanion(
+    return PracticesCompanion(
       id: id ?? this.id,
       title: title ?? this.title,
+      description: description ?? this.description,
+      fullDescription: fullDescription ?? this.fullDescription,
       difficulty: difficulty ?? this.difficulty,
-      durationMultiplier: durationMultiplier ?? this.durationMultiplier,
+      iconType: iconType ?? this.iconType,
       createdAt: createdAt ?? this.createdAt,
+      durationMultiplier: durationMultiplier ?? this.durationMultiplier,
+      isCustom: isCustom ?? this.isCustom,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -345,14 +543,26 @@ class CustomPracticesCompanion extends UpdateCompanion<CustomPracticeEntity> {
     if (title.present) {
       map['title'] = Variable<String>(title.value);
     }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (fullDescription.present) {
+      map['full_description'] = Variable<String>(fullDescription.value);
+    }
     if (difficulty.present) {
       map['difficulty'] = Variable<String>(difficulty.value);
+    }
+    if (iconType.present) {
+      map['icon_type'] = Variable<String>(iconType.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     if (durationMultiplier.present) {
       map['duration_multiplier'] = Variable<String>(durationMultiplier.value);
     }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+    if (isCustom.present) {
+      map['is_custom'] = Variable<bool>(isCustom.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -362,12 +572,16 @@ class CustomPracticesCompanion extends UpdateCompanion<CustomPracticeEntity> {
 
   @override
   String toString() {
-    return (StringBuffer('CustomPracticesCompanion(')
+    return (StringBuffer('PracticesCompanion(')
           ..write('id: $id, ')
           ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('fullDescription: $fullDescription, ')
           ..write('difficulty: $difficulty, ')
-          ..write('durationMultiplier: $durationMultiplier, ')
+          ..write('iconType: $iconType, ')
           ..write('createdAt: $createdAt, ')
+          ..write('durationMultiplier: $durationMultiplier, ')
+          ..write('isCustom: $isCustom, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -400,7 +614,7 @@ class $MovementsTable extends Movements
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES custom_practices (id)',
+      'REFERENCES practices (id)',
     ),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
@@ -808,59 +1022,50 @@ class MovementsCompanion extends UpdateCompanion<MovementEntity> {
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
-  late final $CustomPracticesTable customPractices = $CustomPracticesTable(
-    this,
-  );
+  late final $PracticesTable practices = $PracticesTable(this);
   late final $MovementsTable movements = $MovementsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [
-    customPractices,
-    movements,
-  ];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [practices, movements];
 }
 
-typedef $$CustomPracticesTableCreateCompanionBuilder =
-    CustomPracticesCompanion Function({
+typedef $$PracticesTableCreateCompanionBuilder =
+    PracticesCompanion Function({
       required String id,
       required String title,
+      Value<String?> description,
+      Value<String?> fullDescription,
       required String difficulty,
-      required String durationMultiplier,
+      Value<String?> iconType,
       required DateTime createdAt,
+      required String durationMultiplier,
+      required bool isCustom,
       Value<int> rowid,
     });
-typedef $$CustomPracticesTableUpdateCompanionBuilder =
-    CustomPracticesCompanion Function({
+typedef $$PracticesTableUpdateCompanionBuilder =
+    PracticesCompanion Function({
       Value<String> id,
       Value<String> title,
+      Value<String?> description,
+      Value<String?> fullDescription,
       Value<String> difficulty,
-      Value<String> durationMultiplier,
+      Value<String?> iconType,
       Value<DateTime> createdAt,
+      Value<String> durationMultiplier,
+      Value<bool> isCustom,
       Value<int> rowid,
     });
 
-final class $$CustomPracticesTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $CustomPracticesTable,
-          CustomPracticeEntity
-        > {
-  $$CustomPracticesTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+final class $$PracticesTableReferences
+    extends BaseReferences<_$AppDatabase, $PracticesTable, PracticeEntity> {
+  $$PracticesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$MovementsTable, List<MovementEntity>>
   _movementsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.movements,
-    aliasName: $_aliasNameGenerator(
-      db.customPractices.id,
-      db.movements.practiceId,
-    ),
+    aliasName: $_aliasNameGenerator(db.practices.id, db.movements.practiceId),
   );
 
   $$MovementsTableProcessedTableManager get movementsRefs {
@@ -876,9 +1081,9 @@ final class $$CustomPracticesTableReferences
   }
 }
 
-class $$CustomPracticesTableFilterComposer
-    extends Composer<_$AppDatabase, $CustomPracticesTable> {
-  $$CustomPracticesTableFilterComposer({
+class $$PracticesTableFilterComposer
+    extends Composer<_$AppDatabase, $PracticesTable> {
+  $$PracticesTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -895,8 +1100,28 @@ class $$CustomPracticesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fullDescription => $composableBuilder(
+    column: $table.fullDescription,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get difficulty => $composableBuilder(
     column: $table.difficulty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconType => $composableBuilder(
+    column: $table.iconType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -905,8 +1130,8 @@ class $$CustomPracticesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
+  ColumnFilters<bool> get isCustom => $composableBuilder(
+    column: $table.isCustom,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -936,9 +1161,9 @@ class $$CustomPracticesTableFilterComposer
   }
 }
 
-class $$CustomPracticesTableOrderingComposer
-    extends Composer<_$AppDatabase, $CustomPracticesTable> {
-  $$CustomPracticesTableOrderingComposer({
+class $$PracticesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PracticesTable> {
+  $$PracticesTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -955,8 +1180,28 @@ class $$CustomPracticesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fullDescription => $composableBuilder(
+    column: $table.fullDescription,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get difficulty => $composableBuilder(
     column: $table.difficulty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconType => $composableBuilder(
+    column: $table.iconType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -965,15 +1210,15 @@ class $$CustomPracticesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
+  ColumnOrderings<bool> get isCustom => $composableBuilder(
+    column: $table.isCustom,
     builder: (column) => ColumnOrderings(column),
   );
 }
 
-class $$CustomPracticesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CustomPracticesTable> {
-  $$CustomPracticesTableAnnotationComposer({
+class $$PracticesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PracticesTable> {
+  $$PracticesTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -986,18 +1231,34 @@ class $$CustomPracticesTableAnnotationComposer
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
 
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fullDescription => $composableBuilder(
+    column: $table.fullDescription,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get difficulty => $composableBuilder(
     column: $table.difficulty,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get iconType =>
+      $composableBuilder(column: $table.iconType, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<String> get durationMultiplier => $composableBuilder(
     column: $table.durationMultiplier,
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<bool> get isCustom =>
+      $composableBuilder(column: $table.isCustom, builder: (column) => column);
 
   Expression<T> movementsRefs<T extends Object>(
     Expression<T> Function($$MovementsTableAnnotationComposer a) f,
@@ -1025,71 +1286,85 @@ class $$CustomPracticesTableAnnotationComposer
   }
 }
 
-class $$CustomPracticesTableTableManager
+class $$PracticesTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $CustomPracticesTable,
-          CustomPracticeEntity,
-          $$CustomPracticesTableFilterComposer,
-          $$CustomPracticesTableOrderingComposer,
-          $$CustomPracticesTableAnnotationComposer,
-          $$CustomPracticesTableCreateCompanionBuilder,
-          $$CustomPracticesTableUpdateCompanionBuilder,
-          (CustomPracticeEntity, $$CustomPracticesTableReferences),
-          CustomPracticeEntity,
+          $PracticesTable,
+          PracticeEntity,
+          $$PracticesTableFilterComposer,
+          $$PracticesTableOrderingComposer,
+          $$PracticesTableAnnotationComposer,
+          $$PracticesTableCreateCompanionBuilder,
+          $$PracticesTableUpdateCompanionBuilder,
+          (PracticeEntity, $$PracticesTableReferences),
+          PracticeEntity,
           PrefetchHooks Function({bool movementsRefs})
         > {
-  $$CustomPracticesTableTableManager(
-    _$AppDatabase db,
-    $CustomPracticesTable table,
-  ) : super(
+  $$PracticesTableTableManager(_$AppDatabase db, $PracticesTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$CustomPracticesTableFilterComposer($db: db, $table: table),
+              $$PracticesTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$CustomPracticesTableOrderingComposer($db: db, $table: table),
+              $$PracticesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$CustomPracticesTableAnnotationComposer($db: db, $table: table),
+              $$PracticesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> fullDescription = const Value.absent(),
                 Value<String> difficulty = const Value.absent(),
-                Value<String> durationMultiplier = const Value.absent(),
+                Value<String?> iconType = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String> durationMultiplier = const Value.absent(),
+                Value<bool> isCustom = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => CustomPracticesCompanion(
+              }) => PracticesCompanion(
                 id: id,
                 title: title,
+                description: description,
+                fullDescription: fullDescription,
                 difficulty: difficulty,
-                durationMultiplier: durationMultiplier,
+                iconType: iconType,
                 createdAt: createdAt,
+                durationMultiplier: durationMultiplier,
+                isCustom: isCustom,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String id,
                 required String title,
+                Value<String?> description = const Value.absent(),
+                Value<String?> fullDescription = const Value.absent(),
                 required String difficulty,
-                required String durationMultiplier,
+                Value<String?> iconType = const Value.absent(),
                 required DateTime createdAt,
+                required String durationMultiplier,
+                required bool isCustom,
                 Value<int> rowid = const Value.absent(),
-              }) => CustomPracticesCompanion.insert(
+              }) => PracticesCompanion.insert(
                 id: id,
                 title: title,
+                description: description,
+                fullDescription: fullDescription,
                 difficulty: difficulty,
-                durationMultiplier: durationMultiplier,
+                iconType: iconType,
                 createdAt: createdAt,
+                durationMultiplier: durationMultiplier,
+                isCustom: isCustom,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable(table),
-                  $$CustomPracticesTableReferences(db, table, e),
+                  $$PracticesTableReferences(db, table, e),
                 ),
               )
               .toList(),
@@ -1102,15 +1377,15 @@ class $$CustomPracticesTableTableManager
                 return [
                   if (movementsRefs)
                     await $_getPrefetchedData<
-                      CustomPracticeEntity,
-                      $CustomPracticesTable,
+                      PracticeEntity,
+                      $PracticesTable,
                       MovementEntity
                     >(
                       currentTable: table,
-                      referencedTable: $$CustomPracticesTableReferences
+                      referencedTable: $$PracticesTableReferences
                           ._movementsRefsTable(db),
                       managerFromTypedResult: (p0) =>
-                          $$CustomPracticesTableReferences(
+                          $$PracticesTableReferences(
                             db,
                             table,
                             p0,
@@ -1127,18 +1402,18 @@ class $$CustomPracticesTableTableManager
       );
 }
 
-typedef $$CustomPracticesTableProcessedTableManager =
+typedef $$PracticesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $CustomPracticesTable,
-      CustomPracticeEntity,
-      $$CustomPracticesTableFilterComposer,
-      $$CustomPracticesTableOrderingComposer,
-      $$CustomPracticesTableAnnotationComposer,
-      $$CustomPracticesTableCreateCompanionBuilder,
-      $$CustomPracticesTableUpdateCompanionBuilder,
-      (CustomPracticeEntity, $$CustomPracticesTableReferences),
-      CustomPracticeEntity,
+      $PracticesTable,
+      PracticeEntity,
+      $$PracticesTableFilterComposer,
+      $$PracticesTableOrderingComposer,
+      $$PracticesTableAnnotationComposer,
+      $$PracticesTableCreateCompanionBuilder,
+      $$PracticesTableUpdateCompanionBuilder,
+      (PracticeEntity, $$PracticesTableReferences),
+      PracticeEntity,
       PrefetchHooks Function({bool movementsRefs})
     >;
 typedef $$MovementsTableCreateCompanionBuilder =
@@ -1166,17 +1441,17 @@ final class $$MovementsTableReferences
     extends BaseReferences<_$AppDatabase, $MovementsTable, MovementEntity> {
   $$MovementsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $CustomPracticesTable _practiceIdTable(_$AppDatabase db) =>
-      db.customPractices.createAlias(
-        $_aliasNameGenerator(db.movements.practiceId, db.customPractices.id),
+  static $PracticesTable _practiceIdTable(_$AppDatabase db) =>
+      db.practices.createAlias(
+        $_aliasNameGenerator(db.movements.practiceId, db.practices.id),
       );
 
-  $$CustomPracticesTableProcessedTableManager get practiceId {
+  $$PracticesTableProcessedTableManager get practiceId {
     final $_column = $_itemColumn<String>('practice_id')!;
 
-    final manager = $$CustomPracticesTableTableManager(
+    final manager = $$PracticesTableTableManager(
       $_db,
-      $_db.customPractices,
+      $_db.practices,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_practiceIdTable($_db));
     if (item == null) return manager;
@@ -1220,20 +1495,20 @@ class $$MovementsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$CustomPracticesTableFilterComposer get practiceId {
-    final $$CustomPracticesTableFilterComposer composer = $composerBuilder(
+  $$PracticesTableFilterComposer get practiceId {
+    final $$PracticesTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.practiceId,
-      referencedTable: $db.customPractices,
+      referencedTable: $db.practices,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$CustomPracticesTableFilterComposer(
+          }) => $$PracticesTableFilterComposer(
             $db: $db,
-            $table: $db.customPractices,
+            $table: $db.practices,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1278,20 +1553,20 @@ class $$MovementsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$CustomPracticesTableOrderingComposer get practiceId {
-    final $$CustomPracticesTableOrderingComposer composer = $composerBuilder(
+  $$PracticesTableOrderingComposer get practiceId {
+    final $$PracticesTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.practiceId,
-      referencedTable: $db.customPractices,
+      referencedTable: $db.practices,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$CustomPracticesTableOrderingComposer(
+          }) => $$PracticesTableOrderingComposer(
             $db: $db,
-            $table: $db.customPractices,
+            $table: $db.practices,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1332,20 +1607,20 @@ class $$MovementsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  $$CustomPracticesTableAnnotationComposer get practiceId {
-    final $$CustomPracticesTableAnnotationComposer composer = $composerBuilder(
+  $$PracticesTableAnnotationComposer get practiceId {
+    final $$PracticesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.practiceId,
-      referencedTable: $db.customPractices,
+      referencedTable: $db.practices,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$CustomPracticesTableAnnotationComposer(
+          }) => $$PracticesTableAnnotationComposer(
             $db: $db,
-            $table: $db.customPractices,
+            $table: $db.practices,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1489,8 +1764,8 @@ typedef $$MovementsTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$CustomPracticesTableTableManager get customPractices =>
-      $$CustomPracticesTableTableManager(_db, _db.customPractices);
+  $$PracticesTableTableManager get practices =>
+      $$PracticesTableTableManager(_db, _db.practices);
   $$MovementsTableTableManager get movements =>
       $$MovementsTableTableManager(_db, _db.movements);
 }

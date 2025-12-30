@@ -1,18 +1,17 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:yoga_coach/features/practice/data/database/drift_database.dart';
-import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
-import 'package:yoga_coach/features/practice/domain/entities/practice.dart' show Movement, DifficultyLevel;
+import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 import 'package:yoga_coach/features/practice/domain/repositories/practice_repo.dart';
 
-class CustomPracticeRepository implements PracticeRepo{
+class PracticeRepository implements PracticeRepo {
   final AppDatabase _database;
 
-  CustomPracticeRepository({required AppDatabase database}) : _database = database;
+  PracticeRepository({required AppDatabase database}) : _database = database;
 
-  /// Получить все кастомные тренировки
-  Future<List<CustomPractice>> getAllPractices() async {
-    final practices = await _database.getAllCustomPractices();
-    final result = <CustomPractice>[];
+  @override
+  Future<List<Practice>> getAllPractices() async {
+    final practices = await _database.getAllPractices();
+    final result = <Practice>[];
 
     for (final practice in practices) {
       final movements =
@@ -25,23 +24,27 @@ class CustomPracticeRepository implements PracticeRepo{
     return result;
   }
 
-  /// Получить одну тренировку по ID
-  Future<CustomPractice?> getPracticeById(String id) async {
-    final practice = await _database.getCustomPracticeById(id);
+  @override
+  Future<Practice?> getPracticeById(String id) async {
+    final practice = await _database.getPracticeById(id);
     if (practice == null) return null;
 
     final movements = await _database.getMovementsByPracticeId(id);
     return _entityToDomain(practice, movements);
   }
 
-  /// Сохранить новую тренировку
-  Future<void> savePractice(CustomPractice practice) async {
-    final practiceCompanion = CustomPracticesCompanion(
+  @override
+  Future<void> savePractice(Practice practice) async {
+    final practiceCompanion = PracticesCompanion(
       id: drift.Value(practice.id),
       title: drift.Value(practice.title),
+      description: drift.Value(practice.description),
+      fullDescription: drift.Value(practice.fullDescription),
       difficulty: drift.Value(practice.difficulty.name),
-      durationMultiplier: drift.Value(practice.durationMultiplier.label),
+      iconType: drift.Value(practice.iconType?.name),
       createdAt: drift.Value(practice.createdAt),
+      durationMultiplier: drift.Value(practice.durationMultiplier.label),
+      isCustom: drift.Value(practice.isCustom),
     );
 
     final movements = practice.movements.asMap().entries.map((entry) {
@@ -49,7 +52,7 @@ class CustomPracticeRepository implements PracticeRepo{
       final index = entry.key;
 
       return MovementsCompanion(
-        id: drift.Value('${practice.id}-${index}'),
+        id: drift.Value('${practice.id}-$index'),
         practiceId: drift.Value(practice.id),
         name: drift.Value(movement.name),
         description: drift.Value(movement.description),
@@ -61,22 +64,19 @@ class CustomPracticeRepository implements PracticeRepo{
     await _database.insertPracticeWithMovements(practiceCompanion, movements);
   }
 
-  /// Удалить тренировку
+  @override
   Future<void> deletePractice(String id) async {
     await _database.deletePracticeWithMovements(id);
   }
 
-  /// Обновить тренировку
-  Future<void> updatePractice(CustomPractice practice) async {
-    // Удаляем старую тренировку и её движения
+  @override
+  Future<void> updatePractice(Practice practice) async {
     await _database.deletePracticeWithMovements(practice.id);
-    // Сохраняем обновленную
     await savePractice(practice);
   }
 
-  /// Конвертировать сущности БД в domain модели
-  CustomPractice _entityToDomain(
-    CustomPracticeEntity practice,
+  Practice _entityToDomain(
+    PracticeEntity practice,
     List<MovementEntity> movements,
   ) {
     final difficulty = DifficultyLevel.values.firstWhere(
@@ -89,22 +89,33 @@ class CustomPracticeRepository implements PracticeRepo{
       orElse: () => DurationMultiplier.x1,
     );
 
+    final iconType = practice.iconType != null
+        ? IconType.values.firstWhere(
+            (i) => i.name == practice.iconType,
+            orElse: () => IconType.lotus,
+          )
+        : null;
+
     final domainMovements = movements
         .map((m) => Movement(
-          id: m.id,
-          name: m.name,
-          description: m.description,
-          durationSeconds: m.durationSeconds,
-        ))
+              id: m.id,
+              name: m.name,
+              description: m.description,
+              durationSeconds: m.durationSeconds,
+            ))
         .toList();
 
-    return CustomPractice(
+    return Practice(
       id: practice.id,
       title: practice.title,
+      description: practice.description,
+      fullDescription: practice.fullDescription,
       movements: domainMovements,
       createdAt: practice.createdAt,
       difficulty: difficulty,
       durationMultiplier: multiplier,
+      iconType: iconType,
+      isCustom: practice.isCustom,
     );
   }
 }

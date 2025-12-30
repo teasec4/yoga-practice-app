@@ -4,10 +4,18 @@ import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 class PracticeTile extends StatelessWidget {
   final Practice practice;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
-  const PracticeTile({required this.practice, this.onTap, super.key});
+  const PracticeTile({
+    required this.practice,
+    this.onTap,
+    this.onEdit,
+    this.onDelete,
+    super.key,
+  });
 
-  IconData _getIconData(IconType type) {
+  IconData _getIconData(IconType? type) {
     switch (type) {
       case IconType.lotus:
         return Icons.self_improvement;
@@ -29,6 +37,8 @@ class PracticeTile extends StatelessWidget {
         return Icons.hub;
       case IconType.relaxation:
         return Icons.cloud;
+      default:
+        return Icons.self_improvement;
     }
   }
 
@@ -99,21 +109,47 @@ class PracticeTile extends StatelessWidget {
                         children: [
                           Text(
                             practice.title,
-                            style: Theme.of(context).textTheme.titleMedium
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            practice.description,
-                            style: Theme.of(context).textTheme.bodySmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          if (practice.description != null)
+                            Text(
+                              practice.description!,
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                         ],
                       ),
                     ),
+                    if (onEdit != null || onDelete != null)
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            onEdit?.call();
+                          } else if (value == 'delete') {
+                            onDelete?.call();
+                          }
+                        },
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<String>>[
+                          if (onEdit != null)
+                            const PopupMenuItem<String>(
+                              value: 'edit',
+                              child: Text('Edit'),
+                            ),
+                          if (onDelete != null)
+                            const PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Text('Delete'),
+                            ),
+                        ],
+                      ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -128,7 +164,9 @@ class PracticeTile extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${practice.durationMinutes} min',
-                          style: Theme.of(context).textTheme.labelSmall
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
                               ?.copyWith(color: colors.outline),
                         ),
                       ],
@@ -148,9 +186,9 @@ class PracticeTile extends StatelessWidget {
                       child: Text(
                         _getDifficultyLabel(practice.difficulty),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: difficultyColor,
-                          fontWeight: FontWeight.w600,
-                        ),
+                              color: difficultyColor,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ),
                     const Spacer(),
@@ -166,7 +204,9 @@ class PracticeTile extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${practice.poseCount}',
-                          style: Theme.of(context).textTheme.labelSmall
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
                               ?.copyWith(color: colors.outline),
                         ),
                       ],

@@ -1,13 +1,12 @@
 import 'package:go_router/go_router.dart';
 import 'package:yoga_coach/app/routes/main_shell.dart';
-import 'package:yoga_coach/features/practice/presentation/screens/practice_screen.dart';
+import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
+import 'package:yoga_coach/features/practice/presentation/screens/create_practice_screen.dart';
 import 'package:yoga_coach/features/practice/presentation/screens/practice_detail_screen.dart';
 import 'package:yoga_coach/features/practice/presentation/screens/practice_playback_screen.dart';
-import 'package:yoga_coach/features/practice/presentation/screens/create_custom_practice_screen.dart';
-import 'package:yoga_coach/features/practice/presentation/screens/custom_practice_detail_screen.dart';
-import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
-import 'package:yoga_coach/features/statistics/presentation/screens/statistics_screen.dart';
+import 'package:yoga_coach/features/practice/presentation/screens/practice_screen.dart';
 import 'package:yoga_coach/features/me/presentation/screens/me_screen.dart';
+import 'package:yoga_coach/features/statistics/presentation/screens/statistics_screen.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/practice',
@@ -21,45 +20,18 @@ final goRouter = GoRouter(
           path: '/practice',
           name: 'practice',
           pageBuilder: (context, state) =>
-              NoTransitionPage(child: const PracticeScreen()),
+              const NoTransitionPage(child: PracticeScreen()),
           routes: [
             GoRoute(
               path: 'create',
               name: 'createPractice',
               pageBuilder: (context, state) {
-                final editingPractice = state.extra as CustomPractice?;
+                final editingPractice = state.extra as Practice?;
                 return NoTransitionPage(
-                  child: CreateCustomPracticeScreen(editingPractice: editingPractice),
+                  child: CreatePracticeScreen(editingPractice: editingPractice),
                 );
               },
             ),
-            // Custom practice detail route
-            GoRoute(
-              path: 'custom/:id',
-              name: 'customPracticeDetail',
-              pageBuilder: (context, state) {
-                final practiceId = state.pathParameters['id'] ?? '';
-                return NoTransitionPage(
-                  child: CustomPracticeDetailScreen(practiceId: practiceId),
-                );
-              },
-              routes: [
-                GoRoute(
-                   path: 'playback',
-                   name: 'customPracticePlayback',
-                   pageBuilder: (context, state) {
-                     final practiceId = state.pathParameters['id'] ?? '';
-                     return NoTransitionPage(
-                       child: PracticePlaybackScreen(
-                         practiceId: practiceId,
-                         isCustom: true,
-                       ),
-                     );
-                   },
-                 ),
-              ],
-            ),
-            // Standard practice detail route
             GoRoute(
               path: ':id',
               name: 'practiceDetail',
@@ -71,19 +43,17 @@ final goRouter = GoRouter(
               },
               routes: [
                 GoRoute(
-                   path: 'playback',
-                   name: 'practicePlayback',
-                   pageBuilder: (context, state) {
-                     final practiceId = state.pathParameters['id'] ?? '';
-                     final isCustom = state.uri.queryParameters['custom'] == 'true';
-                     return NoTransitionPage(
-                       child: PracticePlaybackScreen(
-                         practiceId: practiceId,
-                         isCustom: isCustom,
-                       ),
-                     );
-                   },
-                 ),
+                  path: 'playback',
+                  name: 'practicePlayback',
+                  pageBuilder: (context, state) {
+                    final practiceId = state.pathParameters['id'] ?? '';
+                    return NoTransitionPage(
+                      child: PracticePlaybackScreen(
+                        practiceId: practiceId,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ],
@@ -92,19 +62,15 @@ final goRouter = GoRouter(
           path: '/statistics',
           name: 'statistics',
           pageBuilder: (context, state) =>
-              NoTransitionPage(child: const StatisticsScreen()),
+              const NoTransitionPage(child: StatisticsScreen()),
         ),
         GoRoute(
           path: '/me',
           name: 'me',
           pageBuilder: (context, state) =>
-              NoTransitionPage(child: const MeScreen()),
+              const NoTransitionPage(child: MeScreen()),
         ),
       ],
     ),
   ],
-  redirect: (context, state) {
-    // Auto-pop to root when navigating between main tabs
-    return null;
-  },
 );

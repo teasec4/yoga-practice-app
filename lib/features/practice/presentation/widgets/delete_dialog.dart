@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
+import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 
 /// Improved delete dialog with undo option
 class DeletePracticeDialog extends StatefulWidget {
-  final CustomPractice practice;
+  final Practice practice;
   final VoidCallback onConfirm;
 
   const DeletePracticeDialog({

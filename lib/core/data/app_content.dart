@@ -8,49 +8,6 @@ export 'package:yoga_coach/features/practice/domain/entities/practice.dart'
 /// Edit this file to change default practices and available poses for custom practice creation
 
 // ============================================================================
-// STANDARD PRACTICES (3 main practices displayed on Practice screen)
-// ============================================================================
-
-final standardPractices = [
-  Practice(
-    id: '1',
-    title: 'Lotus Flow',
-    description: 'Gentle opening sequence',
-    fullDescription:
-        'Start your yoga journey with this gentle opening sequence. Perfect for beginners, this lesson combines breath work with flowing movements to warm up your body and prepare for deeper poses.',
-    durationMinutes: 15,
-    difficulty: DifficultyLevel.beginner,
-    completedCount: 1245,
-    iconType: IconType.lotus,
-    movements: availableMovements.where((m) => m.id.startsWith('1-')).toList(),
-  ),
-  Practice(
-    id: '2',
-    title: 'Tree Pose Balance',
-    description: 'Improve stability and focus',
-    fullDescription:
-        'Develop your sense of balance and improve focus with this tree pose focused practice. This lesson emphasizes grounding and mental clarity through standing balance poses.',
-    durationMinutes: 20,
-    difficulty: DifficultyLevel.beginner,
-    completedCount: 892,
-    iconType: IconType.tree,
-    movements: availableMovements.where((m) => m.id.startsWith('2-')).toList(),
-  ),
-  Practice(
-    id: '3',
-    title: 'Warrior Strength',
-    description: 'Build power and endurance',
-    fullDescription:
-        'Build strength and confidence with warrior poses. This dynamic practice targets your legs, core, and upper body while building mental resilience and determination.',
-    durationMinutes: 30,
-    difficulty: DifficultyLevel.intermediate,
-    completedCount: 567,
-    iconType: IconType.warrior,
-    movements: availableMovements.where((m) => m.id.startsWith('3-')).toList(),
-  ),
-];
-
-// ============================================================================
 // AVAILABLE MOVEMENTS (All poses that can be selected for custom practices)
 // Organized by practice ID for easy navigation
 // ============================================================================
@@ -216,5 +173,48 @@ final availableMovements = [
     name: 'Savasana',
     description: 'Final relaxation',
     durationSeconds: 120,
+  ),
+];
+
+// ============================================================================
+// STANDARD PRACTICES (3 main practices displayed on Practice screen)
+// ============================================================================
+
+final standardPractices = [
+  Practice(
+    id: '1',
+    title: 'Lotus Flow',
+    description: 'Gentle opening sequence',
+    fullDescription:
+        'Start your yoga journey with this gentle opening sequence. Perfect for beginners, this lesson combines breath work with flowing movements to warm up your body and prepare for deeper poses.',
+    difficulty: DifficultyLevel.beginner,
+    iconType: IconType.lotus,
+    movements: availableMovements.where((m) => m.id.startsWith('1-')).toList(),
+    createdAt: DateTime.now(),
+    isCustom: false,
+  ),
+  Practice(
+    id: '2',
+    title: 'Tree Pose Balance',
+    description: 'Improve stability and focus',
+    fullDescription:
+        'Develop your sense of balance and improve focus with this tree pose focused practice. This lesson emphasizes grounding and mental clarity through standing balance poses.',
+    difficulty: DifficultyLevel.beginner,
+    iconType: IconType.tree,
+    movements: availableMovements.where((m) => m.id.startsWith('2-')).toList(),
+    createdAt: DateTime.now(),
+    isCustom: false,
+  ),
+  Practice(
+    id: '3',
+    title: 'Warrior Strength',
+    description: 'Build power and endurance',
+    fullDescription:
+        'Build strength and confidence with warrior poses. This dynamic practice targets your legs, core, and upper body while building mental resilience and determination.',
+    difficulty: DifficultyLevel.intermediate,
+    iconType: IconType.warrior,
+    movements: availableMovements.where((m) => m.id.startsWith('3-')).toList(),
+    createdAt: DateTime.now(),
+    isCustom: false,
   ),
 ];
