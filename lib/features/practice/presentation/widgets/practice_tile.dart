@@ -109,9 +109,7 @@ class PracticeTile extends StatelessWidget {
                         children: [
                           Text(
                             practice.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -138,17 +136,17 @@ class PracticeTile extends StatelessWidget {
                         },
                         itemBuilder: (BuildContext context) =>
                             <PopupMenuEntry<String>>[
-                          if (onEdit != null)
-                            const PopupMenuItem<String>(
-                              value: 'edit',
-                              child: Text('Edit'),
-                            ),
-                          if (onDelete != null)
-                            const PopupMenuItem<String>(
-                              value: 'delete',
-                              child: Text('Delete'),
-                            ),
-                        ],
+                              if (onEdit != null)
+                                const PopupMenuItem<String>(
+                                  value: 'edit',
+                                  child: Text('Edit'),
+                                ),
+                              if (onDelete != null)
+                                const PopupMenuItem<String>(
+                                  value: 'delete',
+                                  child: Text('Delete'),
+                                ),
+                            ],
                       ),
                   ],
                 ),
@@ -164,9 +162,7 @@ class PracticeTile extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${practice.durationMinutes} min',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
+                          style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(color: colors.outline),
                         ),
                       ],
@@ -186,9 +182,9 @@ class PracticeTile extends StatelessWidget {
                       child: Text(
                         _getDifficultyLabel(practice.difficulty),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: difficultyColor,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          color: difficultyColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const Spacer(),
@@ -204,9 +200,7 @@ class PracticeTile extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${practice.poseCount}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
+                          style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(color: colors.outline),
                         ),
                       ],

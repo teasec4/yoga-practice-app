@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yoga_coach/app/routes/main_shell.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
@@ -16,22 +17,26 @@ final goRouter = GoRouter(
         return MainShell(child: child);
       },
       routes: [
+        // Practice List
         GoRoute(
           path: '/practice',
           name: 'practice',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: PracticeScreen()),
           routes: [
+            // Create/Edit Practice (Modal)
             GoRoute(
               path: 'create',
               name: 'createPractice',
               pageBuilder: (context, state) {
                 final editingPractice = state.extra as Practice?;
-                return NoTransitionPage(
+                return MaterialPage(
+                  fullscreenDialog: true,
                   child: CreatePracticeScreen(editingPractice: editingPractice),
                 );
               },
             ),
+            // Practice Detail
             GoRoute(
               path: ':id',
               name: 'practiceDetail',
@@ -42,15 +47,14 @@ final goRouter = GoRouter(
                 );
               },
               routes: [
+                // Practice Playback (Full Screen)
                 GoRoute(
                   path: 'playback',
                   name: 'practicePlayback',
                   pageBuilder: (context, state) {
                     final practiceId = state.pathParameters['id'] ?? '';
                     return NoTransitionPage(
-                      child: PracticePlaybackScreen(
-                        practiceId: practiceId,
-                      ),
+                      child: PracticePlaybackScreen(practiceId: practiceId),
                     );
                   },
                 ),
@@ -58,12 +62,14 @@ final goRouter = GoRouter(
             ),
           ],
         ),
+        // Statistics
         GoRoute(
           path: '/statistics',
           name: 'statistics',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: StatisticsScreen()),
         ),
+        // Me/Profile
         GoRoute(
           path: '/me',
           name: 'me',

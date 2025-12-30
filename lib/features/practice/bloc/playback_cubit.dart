@@ -32,10 +32,8 @@ class PlaybackCubit extends Cubit<PlaybackState> {
   final String practiceId;
   final PracticeRepository repository;
 
-  PlaybackCubit({
-    required this.practiceId,
-    required this.repository,
-  }) : super(PlaybackInitial()) {
+  PlaybackCubit({required this.practiceId, required this.repository})
+    : super(PlaybackInitial()) {
     _loadMovements();
   }
 
@@ -44,11 +42,13 @@ class PlaybackCubit extends Cubit<PlaybackState> {
     try {
       final practice = await repository.getPracticeById(practiceId);
       if (practice != null) {
-        emit(PlaybackLoaded(
-          movements: practice.movements,
-          currentIndex: 0,
-          durationMultiplier: practice.durationMultiplier.value,
-        ));
+        emit(
+          PlaybackLoaded(
+            movements: practice.movements,
+            currentIndex: 0,
+            durationMultiplier: practice.durationMultiplier.value,
+          ),
+        );
       } else {
         emit(PlaybackError('Practice not found'));
       }
@@ -61,11 +61,13 @@ class PlaybackCubit extends Cubit<PlaybackState> {
     if (state is PlaybackLoaded) {
       final currentState = state as PlaybackLoaded;
       if (currentState.currentIndex < currentState.movements.length - 1) {
-        emit(PlaybackLoaded(
-          movements: currentState.movements,
-          currentIndex: currentState.currentIndex + 1,
-          durationMultiplier: currentState.durationMultiplier,
-        ));
+        emit(
+          PlaybackLoaded(
+            movements: currentState.movements,
+            currentIndex: currentState.currentIndex + 1,
+            durationMultiplier: currentState.durationMultiplier,
+          ),
+        );
       } else {
         emit(PlaybackFinished());
       }
@@ -75,11 +77,13 @@ class PlaybackCubit extends Cubit<PlaybackState> {
   void selectMovement(int index) {
     if (state is PlaybackLoaded) {
       final currentState = state as PlaybackLoaded;
-      emit(PlaybackLoaded(
-        movements: currentState.movements,
-        currentIndex: index,
-        durationMultiplier: currentState.durationMultiplier,
-      ));
+      emit(
+        PlaybackLoaded(
+          movements: currentState.movements,
+          currentIndex: index,
+          durationMultiplier: currentState.durationMultiplier,
+        ),
+      );
     }
   }
 }

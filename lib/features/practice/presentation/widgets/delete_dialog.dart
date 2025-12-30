@@ -58,19 +58,15 @@ class _DeletePracticeDialogState extends State<DeletePracticeDialog>
                 color: Colors.red.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-                size: 28,
-              ),
+              child: Icon(Icons.delete_outline, color: Colors.red, size: 28),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Delete Practice?',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -81,9 +77,9 @@ class _DeletePracticeDialogState extends State<DeletePracticeDialog>
           children: [
             Text(
               'You\'re about to delete "${widget.practice.title}".',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colors.outline,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.outline),
             ),
             const SizedBox(height: 12),
             Container(
@@ -95,18 +91,14 @@ class _DeletePracticeDialogState extends State<DeletePracticeDialog>
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 18,
-                    color: colors.primary,
-                  ),
+                  Icon(Icons.info_outline, size: 18, color: colors.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'This action cannot be undone.',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colors.primary,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelMedium?.copyWith(color: colors.primary),
                     ),
                   ),
                 ],
@@ -117,9 +109,7 @@ class _DeletePracticeDialogState extends State<DeletePracticeDialog>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: colors.outline,
-            ),
+            style: TextButton.styleFrom(foregroundColor: colors.outline),
             child: const Text('Cancel'),
           ),
           ElevatedButton(

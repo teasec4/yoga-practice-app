@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:yoga_coach/features/practice/bloc/practice_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:yoga_coach/features/practice/bloc/practice_list_cubit.dart';
+import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 
 class CreatePracticeScreen extends StatefulWidget {
   final Practice? editingPractice;
@@ -10,8 +10,7 @@ class CreatePracticeScreen extends StatefulWidget {
   const CreatePracticeScreen({this.editingPractice, super.key});
 
   @override
-  State<CreatePracticeScreen> createState() =>
-      _CreatePracticeScreenState();
+  State<CreatePracticeScreen> createState() => _CreatePracticeScreenState();
 }
 
 class _CreatePracticeScreenState extends State<CreatePracticeScreen>
@@ -27,7 +26,7 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     if (widget.editingPractice != null) {
       final practice = widget.editingPractice!;
       _nameController.text = practice.title;
@@ -59,7 +58,7 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
     });
   }
 
-  void _createPractice() {
+  Future<void> _createPractice() async {
     if (_nameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a practice name')),
@@ -75,7 +74,9 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
     }
 
     final practice = Practice(
-      id: widget.editingPractice?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id:
+          widget.editingPractice?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       title: _nameController.text,
       movements: _selectedMovements,
       createdAt: widget.editingPractice?.createdAt ?? DateTime.now(),
@@ -84,7 +85,40 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
       isCustom: true,
     );
 
-    context.pop(practice);
+    try {
+      // Обновляем список
+      if (widget.editingPractice != null) {
+        await context.read<PracticeListCubit>().updatePractice(practice);
+      } else {
+        await context.read<PracticeListCubit>().addPractice(practice);
+      }
+      
+      // Закрываем modal
+      if (mounted) {
+        Navigator.of(context).pop();
+        
+        // Показываем снэк-бар уведомление
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.editingPractice != null
+                  ? '${practice.title} updated'
+                  : 'Custom practice "${practice.title}" created',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Color _getDifficultyColor(DifficultyLevel level) {
@@ -120,11 +154,15 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.editingPractice != null ? 'Edit Practice' : 'Create Custom Practice'),
+        title: Text(
+          widget.editingPractice != null
+              ? 'Edit Practice'
+              : 'Create Custom Practice',
+        ),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         elevation: 0,
       ),
@@ -135,9 +173,7 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
             decoration: BoxDecoration(
               color: colors.surface,
               border: Border(
-                bottom: BorderSide(
-                  color: colors.outline.withOpacity(0.1),
-                ),
+                bottom: BorderSide(color: colors.outline.withOpacity(0.1)),
               ),
             ),
             child: Column(
@@ -274,9 +310,7 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
                                     decoration: BoxDecoration(
                                       color: _selectedMultiplier == multiplier
                                           ? colors.secondary
-                                          : colors.secondary.withOpacity(
-                                              0.1,
-                                            ),
+                                          : colors.secondary.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
                                         color: _selectedMultiplier == multiplier
@@ -318,9 +352,7 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
             decoration: BoxDecoration(
               color: colors.primary.withOpacity(0.05),
               border: Border(
-                bottom: BorderSide(
-                  color: colors.outline.withOpacity(0.1),
-                ),
+                bottom: BorderSide(color: colors.outline.withOpacity(0.1)),
               ),
             ),
             child: Row(
@@ -404,9 +436,9 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
 
   Widget _buildAvailablePosesTab(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return BlocBuilder<PracticeBloc, PracticeState>(
+    return BlocBuilder<PracticeListCubit, PracticeListState>(
       builder: (context, state) {
-        if (state is PracticeLoaded) {
+        if (state is PracticeListLoaded) {
           final practices = state.practices.where((p) => !p.isCustom).toList();
           return ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -430,7 +462,9 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
                     ),
                   ),
                   ...practice.movements.map((movement) {
-                    final isSelected = _selectedMovementIds.contains(movement.id);
+                    final isSelected = _selectedMovementIds.contains(
+                      movement.id,
+                    );
                     final order = isSelected
                         ? _selectedMovements.indexOf(movement) + 1
                         : null;
@@ -498,7 +532,9 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
                                     ),
                                     Text(
                                       '${movement.durationSeconds}s',
-                                      style: Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                   ],
                                 ),
@@ -538,11 +574,7 @@ class _CreatePracticeScreenState extends State<CreatePracticeScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.inbox,
-              size: 48,
-              color: colors.outline.withOpacity(0.3),
-            ),
+            Icon(Icons.inbox, size: 48, color: colors.outline.withOpacity(0.3)),
             const SizedBox(height: 16),
             Text(
               'No poses selected',

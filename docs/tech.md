@@ -32,12 +32,15 @@
 ### Production
 - `cupertino_icons: ^1.0.8` - iOS-style icons
 - `go_router: ^14.6.0` - Declarative routing
+- `getIt` - DI
+- `flutter_bloc` - State Management
 
 ### Development
 - `flutter_lints: ^6.0.0` - Recommended linting rules
 - `flutter_test` - Testing framework
+- `getIt` - DI
+- `flutter_bloc` - State Management
 
 ## Planned Integrations (Phase 2)
 - **State Management**: BLoC pattern with flutter_bloc
 - **Database**: Drift/SQLite for local data persistence
-- **Authentication**: User login/registration system

@@ -3,15 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yoga_coach/core/di/service_locator.dart';
 import 'package:yoga_coach/features/practice/bloc/playback_cubit.dart';
+import 'package:yoga_coach/features/practice/bloc/practice_list_cubit.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 
 class PracticePlaybackScreen extends StatefulWidget {
   final String practiceId;
 
-  const PracticePlaybackScreen({
-    required this.practiceId,
-    super.key,
-  });
+  const PracticePlaybackScreen({required this.practiceId, super.key});
 
   @override
   State<PracticePlaybackScreen> createState() => _PracticePlaybackScreenState();
@@ -28,6 +26,7 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
 
   void _closeScreen() {
     if (mounted) {
+      context.read<PracticeListCubit>().refreshPractices();
       Navigator.of(context).pop();
     }
   }
@@ -48,8 +47,7 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
           if (state is PlaybackLoaded) {
             final colors = Theme.of(context).colorScheme;
             final movement = state.movements[state.currentIndex];
-            final isLastCard =
-                state.currentIndex >= state.movements.length - 1;
+            final isLastCard = state.currentIndex >= state.movements.length - 1;
 
             return _buildPlaybackScreen(
               context,
@@ -117,21 +115,20 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
         ),
         title: Text(
           '${currentCardIndex + 1}/${movements.length}',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarBrightness:
-              Theme.of(context).brightness == Brightness.light
-                  ? Brightness.light
-                  : Brightness.dark,
+          statusBarBrightness: Theme.of(context).brightness == Brightness.light
+              ? Brightness.light
+              : Brightness.dark,
           statusBarIconBrightness:
               Theme.of(context).brightness == Brightness.light
-                  ? Brightness.dark
-                  : Brightness.light,
+              ? Brightness.dark
+              : Brightness.light,
         ),
       ),
       body: Stack(
@@ -167,9 +164,7 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                           ),
                           child: Text(
                             movement.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w700),
                             textAlign: TextAlign.center,
                           ),
@@ -202,8 +197,7 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                                 ),
                                 child: Text(
                                   movement.description,
-                                  style:
-                                      Theme.of(context).textTheme.bodyMedium,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -229,12 +223,8 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                               ),
                               Text(
                                 '${movement.durationSeconds * durationMultiplier}s',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      color: colors.primary,
-                                    ),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(color: colors.primary),
                               ),
                             ],
                           ),
@@ -255,9 +245,9 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                       child: OutlinedButton(
                         onPressed: currentCardIndex > 0
                             ? () {
-                                context
-                                    .read<PlaybackCubit>()
-                                    .selectMovement(currentCardIndex - 1);
+                                context.read<PlaybackCubit>().selectMovement(
+                                  currentCardIndex - 1,
+                                );
                               }
                             : null,
                         style: OutlinedButton.styleFrom(
@@ -290,20 +280,26 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                       child: ElevatedButton(
                         onPressed: !isLastCard
                             ? () {
-                                context
-                                    .read<PlaybackCubit>()
-                                    .nextMovement();
+                                context.read<PlaybackCubit>().nextMovement();
                               }
                             : () {
-                                Navigator.of(context).pop();
+                                if (context.mounted) {
+                                  context
+                                      .read<PracticeListCubit>()
+                                      .refreshPractices();
+                                  Navigator.of(context).pop();
+                                }
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              isLastCard ? Colors.green : colors.primary,
+                          backgroundColor: isLastCard
+                              ? Colors.green
+                              : colors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          foregroundColor: Colors.white,
                         ),
                         child: Icon(
                           isLastCard ? Icons.check : Icons.arrow_forward,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -359,9 +355,7 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                       final isSelected = index == currentCardIndex;
                       return GestureDetector(
                         onTap: () {
-                          context
-                              .read<PlaybackCubit>()
-                              .selectMovement(index);
+                          context.read<PlaybackCubit>().selectMovement(index);
                           _toggleMovementMap();
                         },
                         child: Container(
@@ -404,8 +398,7 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       movements[index].name,
@@ -418,9 +411,9 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                                     ),
                                     Text(
                                       '${movements[index].durationSeconds}s',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.labelSmall,
                                     ),
                                   ],
                                 ),

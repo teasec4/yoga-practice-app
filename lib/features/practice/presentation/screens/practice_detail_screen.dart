@@ -2,33 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:yoga_coach/features/practice/bloc/practice_bloc.dart';
+import 'package:yoga_coach/core/di/service_locator.dart';
+import 'package:yoga_coach/features/practice/bloc/practice_detail_cubit.dart';
+import 'package:yoga_coach/features/practice/bloc/practice_list_cubit.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 import 'package:yoga_coach/features/practice/presentation/widgets/delete_dialog.dart';
 
-class PracticeDetailScreen extends StatefulWidget {
+class PracticeDetailScreen extends StatelessWidget {
   final String practiceId;
 
   const PracticeDetailScreen({required this.practiceId, super.key});
 
   @override
-  State<PracticeDetailScreen> createState() =>
-      _PracticeDetailScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => getIt<PracticeDetailCubit>()..loadPracticeById(practiceId),
+      child: _PracticeDetailContent(practiceId: practiceId),
+    );
+  }
 }
 
-class _PracticeDetailScreenState
-    extends State<PracticeDetailScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<PracticeBloc>().getPracticeById(widget.practiceId);
-  }
+class _PracticeDetailContent extends StatelessWidget {
+  final String practiceId;
+
+  const _PracticeDetailContent({required this.practiceId});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PracticeBloc, PracticeState>(
+    return BlocBuilder<PracticeDetailCubit, PracticeDetailState>(
       builder: (context, state) {
-        if (state is PracticeLoading) {
+        if (state is PracticeDetailLoading) {
           return Scaffold(
             appBar: AppBar(title: const Text('Practice Details')),
             body: const Center(child: CircularProgressIndicator()),
@@ -47,14 +50,10 @@ class _PracticeDetailScreenState
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () async {
-                      final result = await context.push<Practice>(
-                        '/practice/create',
+                      context.pushNamed(
+                        'createPractice',
                         extra: practice,
                       );
-                      if (result != null && context.mounted) {
-                        context.read<PracticeBloc>().updatePractice(result);
-                        context.pop();
-                      }
                     },
                   ),
                 if (practice.isCustom)
@@ -67,12 +66,12 @@ class _PracticeDetailScreenState
                 statusBarColor: Colors.transparent,
                 statusBarBrightness:
                     Theme.of(context).brightness == Brightness.light
-                        ? Brightness.light
-                        : Brightness.dark,
+                    ? Brightness.light
+                    : Brightness.dark,
                 statusBarIconBrightness:
                     Theme.of(context).brightness == Brightness.light
-                        ? Brightness.dark
-                        : Brightness.light,
+                    ? Brightness.dark
+                    : Brightness.light,
               ),
             ),
             body: Stack(
@@ -100,7 +99,9 @@ class _PracticeDetailScreenState
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Icon(
-                                  practice.isCustom ? Icons.edit : Icons.self_improvement,
+                                  practice.isCustom
+                                      ? Icons.edit
+                                      : Icons.self_improvement,
                                   color: Colors.purple.shade600,
                                   size: 48,
                                 ),
@@ -108,9 +109,7 @@ class _PracticeDetailScreenState
                               const SizedBox(height: 16),
                               Text(
                                 practice.title,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
+                                style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(fontWeight: FontWeight.w700),
                                 textAlign: TextAlign.center,
                               ),
@@ -154,10 +153,8 @@ class _PracticeDetailScreenState
                         // Poses Section
                         Text(
                           'Poses in sequence',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 12),
                         ...practice.movements.asMap().entries.map((entry) {
@@ -196,7 +193,8 @@ class _PracticeDetailScreenState
                                               .textTheme
                                               .titleSmall
                                               ?.copyWith(
-                                                  fontWeight: FontWeight.w600),
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                         ),
                                         Text(
                                           entry.value.description,
@@ -241,40 +239,39 @@ class _PracticeDetailScreenState
                     child:
                         // Start Practice Button
                         SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          context.push(
-                            '/practice/${practice.id}/playback',
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                          onPressed: () {
+                            context.pushNamed(
+                              'practicePlayback',
+                              pathParameters: {'id': practice.id},
+                            );
+                          },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.play_arrow),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Start Practice',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.play_arrow),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Start Practice',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -282,10 +279,10 @@ class _PracticeDetailScreenState
           );
         }
 
-        if (state is PracticeError) {
+        if (state is PracticeDetailError) {
           return Scaffold(
             appBar: AppBar(title: const Text('Error')),
-            body: Center(child: Text(state.errorMessage)),
+            body: Center(child: Text(state.message)),
           );
         }
 
@@ -339,9 +336,9 @@ class _PracticeDetailScreenState
       builder: (dialogContext) => DeletePracticeDialog(
         practice: practice,
         onConfirm: () {
-          context.read<PracticeBloc>().deletePractice(practice.id);
-          Navigator.of(context).pop();
-          context.go('/practice');
+          context.read<PracticeListCubit>().deletePractice(practice.id);
+          Navigator.of(dialogContext).pop();
+          Navigator.of(context).pop(); // Вернуться со страницы деталей
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${practice.title} deleted'),

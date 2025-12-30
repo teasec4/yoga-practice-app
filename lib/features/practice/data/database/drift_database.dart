@@ -47,11 +47,11 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-          await _prepopulateStandardPractices();
-        },
-      );
+    onCreate: (m) async {
+      await m.createAll();
+      await _prepopulateStandardPractices();
+    },
+  );
 
   Future<void> _prepopulateStandardPractices() async {
     for (final practice in standardPractices) {
@@ -89,8 +89,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<PracticeEntity?> getPracticeById(String id) {
-    return (select(practices)..where((tbl) => tbl.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      practices,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
 
   Future<int> insertPractice(PracticesCompanion practice) {
@@ -127,10 +128,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deletePracticeWithMovements(String practiceId) async {
     await transaction(() async {
-      await (delete(movements)..where((tbl) => tbl.practiceId.equals(practiceId)))
-          .go();
-      await (delete(practices)..where((tbl) => tbl.id.equals(practiceId)))
-          .go();
+      await (delete(
+        movements,
+      )..where((tbl) => tbl.practiceId.equals(practiceId))).go();
+      await (delete(practices)..where((tbl) => tbl.id.equals(practiceId))).go();
     });
   }
 }
@@ -139,9 +140,6 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'app_database.db'));
-    return NativeDatabase(
-      file,
-      logStatements: false,
-    );
+    return NativeDatabase(file, logStatements: false);
   });
 }

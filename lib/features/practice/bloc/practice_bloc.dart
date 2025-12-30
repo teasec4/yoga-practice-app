@@ -33,6 +33,10 @@ class PracticeBloc extends Cubit<PracticeState> {
 
   PracticeBloc(this.practiceRepo) : super(PracticeInitial());
 
+  Future<void> refreshPractices() async {
+    await getAllPractices();
+  }
+
   Future<void> getAllPractices() async {
     emit(PracticeLoading());
     try {

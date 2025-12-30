@@ -14,11 +14,8 @@ class PracticeRepository implements PracticeRepo {
     final result = <Practice>[];
 
     for (final practice in practices) {
-      final movements =
-          await _database.getMovementsByPracticeId(practice.id);
-      result.add(
-        _entityToDomain(practice, movements),
-      );
+      final movements = await _database.getMovementsByPracticeId(practice.id);
+      result.add(_entityToDomain(practice, movements));
     }
 
     return result;
@@ -97,12 +94,14 @@ class PracticeRepository implements PracticeRepo {
         : null;
 
     final domainMovements = movements
-        .map((m) => Movement(
-              id: m.id,
-              name: m.name,
-              description: m.description,
-              durationSeconds: m.durationSeconds,
-            ))
+        .map(
+          (m) => Movement(
+            id: m.id,
+            name: m.name,
+            description: m.description,
+            durationSeconds: m.durationSeconds,
+          ),
+        )
         .toList();
 
     return Practice(
