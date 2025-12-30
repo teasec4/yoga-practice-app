@@ -335,16 +335,19 @@ class _PracticeDetailContent extends StatelessWidget {
       context: context,
       builder: (dialogContext) => DeletePracticeDialog(
         practice: practice,
-        onConfirm: () {
-          context.read<PracticeListCubit>().deletePractice(practice.id);
-          Navigator.of(dialogContext).pop();
-          Navigator.of(context).pop(); // Вернуться со страницы деталей
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${practice.title} deleted'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+        onConfirm: () async {
+          await context.read<PracticeListCubit>().deletePractice(practice.id);
+          // Даем время на закрытие диалога перед навигацией
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (context.mounted) {
+            Navigator.of(context).pop(); // Вернуться со страницы деталей
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${practice.title} deleted'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
         },
       ),
     );

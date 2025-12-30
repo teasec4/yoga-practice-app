@@ -4,7 +4,7 @@ import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 /// Improved delete dialog with undo option
 class DeletePracticeDialog extends StatefulWidget {
   final Practice practice;
-  final VoidCallback onConfirm;
+  final Future<void> Function() onConfirm;
 
   const DeletePracticeDialog({
     required this.practice,

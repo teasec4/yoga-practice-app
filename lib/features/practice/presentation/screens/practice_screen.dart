@@ -22,15 +22,16 @@ class PracticeScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) => DeletePracticeDialog(
         practice: practice,
-        onConfirm: () {
-          context.read<PracticeListCubit>().deletePractice(practice.id);
-          Navigator.of(dialogContext).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${practice.title} deleted'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+        onConfirm: () async {
+          await context.read<PracticeListCubit>().deletePractice(practice.id);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${practice.title} deleted'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
         },
       ),
     );
