@@ -57,10 +57,7 @@ class StatisticsScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Explore'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Explore'), elevation: 0),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),

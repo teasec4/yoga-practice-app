@@ -1,8 +1,9 @@
 import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
 
 class CustomPracticeStorage {
-  static final CustomPracticeStorage _instance = CustomPracticeStorage._internal();
-  
+  static final CustomPracticeStorage _instance =
+      CustomPracticeStorage._internal();
+
   final List<CustomPractice> _customPractices = [];
 
   CustomPracticeStorage._internal();
@@ -11,7 +12,8 @@ class CustomPracticeStorage {
     return _instance;
   }
 
-  List<CustomPractice> get customPractices => List.unmodifiable(_customPractices);
+  List<CustomPractice> get customPractices =>
+      List.unmodifiable(_customPractices);
 
   void addPractice(CustomPractice practice) {
     _customPractices.add(practice);

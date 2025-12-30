@@ -1,25 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:yoga_coach/features/practice/data/models/practice_model.dart';
+import 'package:yoga_coach/core/data/app_content.dart';
 import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 
 class CreateCustomPracticeScreen extends StatefulWidget {
-  const CreateCustomPracticeScreen({super.key});
+  final CustomPractice? editingPractice;
+
+  const CreateCustomPracticeScreen({this.editingPractice, super.key});
 
   @override
   State<CreateCustomPracticeScreen> createState() =>
       _CreateCustomPracticeScreenState();
 }
 
-class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen> {
+class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _nameController = TextEditingController();
   final _selectedMovements = <Movement>[];
   final _selectedMovementIds = <String>{};
+  DifficultyLevel _selectedDifficulty = DifficultyLevel.beginner;
+  DurationMultiplier _selectedMultiplier = DurationMultiplier.x1;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    
+    // Если редактируем существующую тренировку
+    if (widget.editingPractice != null) {
+      final practice = widget.editingPractice!;
+      _nameController.text = practice.title;
+      _selectedDifficulty = practice.difficulty;
+      _selectedMultiplier = practice.durationMultiplier;
+      _selectedMovements.addAll(practice.movements);
+      for (final movement in practice.movements) {
+        _selectedMovementIds.add(movement.id);
+      }
+    }
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -51,20 +76,51 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
     }
 
     final customPractice = CustomPractice(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.editingPractice?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: _nameController.text,
       movements: _selectedMovements,
-      createdAt: DateTime.now(),
+      createdAt: widget.editingPractice?.createdAt ?? DateTime.now(),
+      difficulty: _selectedDifficulty,
+      durationMultiplier: _selectedMultiplier,
     );
 
     context.pop(customPractice);
   }
 
+  Color _getDifficultyColor(DifficultyLevel level) {
+    switch (level) {
+      case DifficultyLevel.beginner:
+        return const Color(0xFF8BC98D);
+      case DifficultyLevel.intermediate:
+        return const Color(0xFFE8A655);
+      case DifficultyLevel.advanced:
+        return const Color(0xFFD4727A);
+    }
+  }
+
+  String _getDifficultyLabel(DifficultyLevel level) {
+    switch (level) {
+      case DifficultyLevel.beginner:
+        return 'Beginner';
+      case DifficultyLevel.intermediate:
+        return 'Intermediate';
+      case DifficultyLevel.advanced:
+        return 'Advanced';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final baseDuration = _selectedMovements.fold<int>(
+      0,
+      (sum, m) => sum + m.durationSeconds,
+    );
+    final totalDuration = baseDuration * _selectedMultiplier.value;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Custom Practice'),
+        title: Text(widget.editingPractice != null ? 'Edit Practice' : 'Create Custom Practice'),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -74,258 +130,541 @@ class _CreateCustomPracticeScreenState extends State<CreateCustomPracticeScreen>
       ),
       body: Column(
         children: [
-          // Name input section
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                hintText: 'Practice name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+          // Compact Top section: Name and Settings
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              border: Border(
+                bottom: BorderSide(
+                  color: colors.outline.withValues(alpha: 0.1),
                 ),
-                prefixIcon: const Icon(Icons.edit),
               ),
             ),
-          ),
-
-          // Summary section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                Text(
-                  'Selected: ${_selectedMovements.length}',
-                  style: Theme.of(context).textTheme.titleMedium,
+                // Name Input
+                TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    hintText: 'Practice name',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.edit, size: 20),
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-                Text(
-                  '${_selectedMovements.fold<int>(0, (sum, m) => sum + m.durationSeconds ~/ 60)} min',
-                  style: Theme.of(context).textTheme.titleSmall,
+                const SizedBox(height: 8),
+
+                // Difficulty Selector
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Difficulty',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          for (final difficulty in DifficultyLevel.values)
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedDifficulty = difficulty;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _selectedDifficulty == difficulty
+                                          ? _getDifficultyColor(difficulty)
+                                          : _getDifficultyColor(
+                                              difficulty,
+                                            ).withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: _selectedDifficulty == difficulty
+                                            ? _getDifficultyColor(difficulty)
+                                            : Colors.transparent,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _getDifficultyLabel(difficulty),
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            fontSize: 10,
+                                            color:
+                                                _selectedDifficulty ==
+                                                    difficulty
+                                                ? Colors.white
+                                                : _getDifficultyColor(
+                                                    difficulty,
+                                                  ),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Duration Multiplier Selector
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colors.secondary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Duration ×',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          for (final multiplier in DurationMultiplier.values)
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedMultiplier = multiplier;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _selectedMultiplier == multiplier
+                                          ? colors.secondary
+                                          : colors.secondary.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: _selectedMultiplier == multiplier
+                                            ? colors.secondary
+                                            : Colors.transparent,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      multiplier.label,
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            fontSize: 10,
+                                            color:
+                                                _selectedMultiplier ==
+                                                    multiplier
+                                                ? Colors.white
+                                                : colors.secondary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 16),
-
-          // Preview section
-          if (_selectedMovements.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.purple.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sequence:',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._selectedMovements.asMap().entries.map((entry) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.purple,
-                              radius: 18,
-                              child: Text(
-                                '${entry.key + 1}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    entry.value.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.purple.shade100,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '${entry.value.durationSeconds}s',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.purple.shade700,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
+          // Compact Summary Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.05),
+              border: Border(
+                bottom: BorderSide(
+                  color: colors.outline.withValues(alpha: 0.1),
                 ),
               ),
             ),
-
-          const SizedBox(height: 16),
-          const Divider(),
-
-          // Available poses list
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: mockPractices.length,
-              itemBuilder: (context, index) {
-                final practice = mockPractices[index];
-                return Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12, bottom: 8),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          practice.title,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
+                    Text(
+                      'Poses',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(fontSize: 11),
+                    ),
+                    Text(
+                      '${_selectedMovements.length}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    ...practice.movements.map((movement) {
-                      final isSelected =
-                          _selectedMovementIds.contains(movement.id);
-                      final order = isSelected
-                          ? _selectedMovements.indexOf(movement) + 1
-                          : null;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: InkWell(
-                          onTap: () => _toggleMovement(movement),
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? Colors.purple.shade50
-                                  : Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: isSelected
-                                    ? Colors.purple.shade300
-                                    : Colors.grey.shade300,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                if (isSelected)
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.purple,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '$order',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  SizedBox(
-                                    width: 40,
-                                    height: 40,
-                                    child: Icon(
-                                      Icons.add_circle_outline,
-                                      color: Colors.grey.shade400,
-                                    ),
-                                  ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        movement.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${movement.durationSeconds} sec',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  isSelected
-                                      ? Icons.check_circle
-                                      : Icons.circle_outlined,
-                                  color: isSelected
-                                      ? Colors.purple
-                                      : Colors.grey.shade400,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                    const SizedBox(height: 8),
                   ],
-                );
-              },
+                ),
+                Column(
+                  children: [
+                    Text(
+                      'Duration',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(fontSize: 11),
+                    ),
+                    Text(
+                      '${(totalDuration / 60).ceil()} min',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
-          // Create button
+          // Tab Bar
+          TabBar(
+            controller: _tabController,
+            labelColor: colors.primary,
+            unselectedLabelColor: colors.outline,
+            indicatorColor: colors.primary,
+            tabs: const [
+              Tab(text: 'Available Poses'),
+              Tab(text: 'Selected Poses'),
+            ],
+          ),
+
+          // Tab Content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildAvailablePosesTab(context),
+                _buildSelectedPosesTab(context),
+              ],
+            ),
+          ),
+
+          // Create Button
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: SizedBox(
               width: double.infinity,
+              height: 48,
               child: ElevatedButton.icon(
                 onPressed: _createPractice,
-                icon: const Icon(Icons.check),
+                icon: const Icon(Icons.check, size: 20),
                 label: const Text('Create Practice'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAvailablePosesTab(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    // Group movements by practice
+    final Map<String, (String title, List<Movement> movements)>
+    groupedMovements = {};
+    for (final practice in standardPractices) {
+      groupedMovements[practice.id] = (
+        practice.title,
+        availableMovements
+            .where((m) => m.id.startsWith('${practice.id}-'))
+            .toList(),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      itemCount: groupedMovements.length,
+      itemBuilder: (context, index) {
+        final practiceId = groupedMovements.keys.elementAt(index);
+        final (title, movements) = groupedMovements[practiceId]!;
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 6),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colors.primary,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+            ...movements.map((movement) {
+              final isSelected = _selectedMovementIds.contains(movement.id);
+              final order = isSelected
+                  ? _selectedMovements.indexOf(movement) + 1
+                  : null;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: InkWell(
+                  onTap: () => _toggleMovement(movement),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? colors.primary.withValues(alpha: 0.05)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected
+                            ? colors.primary.withValues(alpha: 0.3)
+                            : colors.outline.withValues(alpha: 0.15),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        if (isSelected)
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: colors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$order',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: Icon(
+                              Icons.add_circle_outline,
+                              color: colors.outline.withValues(alpha: 0.4),
+                              size: 24,
+                            ),
+                          ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                movement.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                '${movement.durationSeconds}s',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          isSelected
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          color: isSelected
+                              ? colors.primary
+                              : colors.outline.withValues(alpha: 0.4),
+                          size: 22,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 6),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSelectedPosesTab(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    if (_selectedMovements.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox,
+              size: 48,
+              color: colors.outline.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No poses selected',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: colors.outline.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Add poses from the "Available Poses" tab',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colors.outline.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      itemCount: _selectedMovements.length,
+      itemBuilder: (context, index) {
+        final movement = _selectedMovements[index];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: colors.outline.withValues(alpha: 0.15)),
+            ),
+            child: Row(
+              children: [
+                // Number Badge
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: colors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+
+                // Movement Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        movement.name,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        movement.description,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Duration and Remove Button
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${movement.durationSeconds}s',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    GestureDetector(
+                      onTap: () => _toggleMovement(movement),
+                      child: Icon(Icons.close, size: 18, color: colors.error),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

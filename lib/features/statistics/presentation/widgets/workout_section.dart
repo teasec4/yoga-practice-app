@@ -23,9 +23,9 @@ class WorkoutSection extends StatelessWidget {
         // Title
         Text(
           title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
 
@@ -59,10 +59,7 @@ class WorkoutSection extends StatelessWidget {
           child: GestureDetector(
             onTap: onViewMore,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
                 border: Border.all(color: colors.primary),
                 borderRadius: BorderRadius.circular(12),
@@ -70,9 +67,9 @@ class WorkoutSection extends StatelessWidget {
               child: Text(
                 'View More',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: colors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: colors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

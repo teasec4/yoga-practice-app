@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
 import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
 import 'package:yoga_coach/features/practice/data/models/practice_model.dart';
-import 'package:yoga_coach/features/practice/data/models/custom_practice_storage.dart';
+import 'package:yoga_coach/features/practice/data/repositories/custom_practice_repository.dart';
+import 'package:yoga_coach/features/practice/data/database/drift_database.dart';
 
 class PracticePlaybackScreen extends StatefulWidget {
   final String practiceId;
+  final bool isCustom;
 
   const PracticePlaybackScreen({
     required this.practiceId,
+    this.isCustom = false,
     super.key,
   });
 
@@ -21,16 +23,38 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
   late int _currentCardIndex;
   late int _totalCards;
   late bool _showMovementMap;
-  late bool _isTimerRunning;
+  late int _durationMultiplier;
+  late Future<List<Movement>> _movementsFuture;
 
   @override
   void initState() {
     super.initState();
     _currentCardIndex = 0;
-    final movements = _getMovements(widget.practiceId);
-    _totalCards = movements.length;
     _showMovementMap = false;
-    _isTimerRunning = false;
+    _durationMultiplier = 1;
+    _movementsFuture = _loadMovements();
+  }
+
+  Future<List<Movement>> _loadMovements() async {
+    if (widget.isCustom) {
+      final database = AppDatabase();
+      final repository = CustomPracticeRepository(database: database);
+      final practice = await repository.getPracticeById(widget.practiceId);
+      if (practice != null) {
+        _durationMultiplier = practice.durationMultiplier.value;
+        _totalCards = practice.movements.length;
+        return practice.movements;
+      }
+    } else {
+      try {
+        final practice = mockPractices.firstWhere((p) => p.id == widget.practiceId);
+        _totalCards = practice.movements.length;
+        return practice.movements;
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   }
 
   void _toggleMovementMap() {
@@ -49,25 +73,7 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
 
   void _closeScreen() {
     if (mounted) {
-      // Pop back to detail screen using Navigator directly
       Navigator.of(context).pop();
-    }
-  }
-
-  List<Movement> _getMovements(String id) {
-    // Try to find in standard practices first
-    try {
-      final practice = mockPractices.firstWhere((p) => p.id == id);
-      return practice.movements;
-    } catch (e) {
-      // Try custom practices
-      final storage = CustomPracticeStorage();
-      final customPractice = storage.getPractice(id);
-      if (customPractice != null) {
-        return customPractice.movements;
-      }
-      // Fallback to first standard practice
-      return mockPractices.first.movements;
     }
   }
 
@@ -98,11 +104,40 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final movements = _getMovements(widget.practiceId);
-    final colors = Theme.of(context).colorScheme;
-    final movement = movements[_currentCardIndex];
-    final isLastCard = _currentCardIndex >= _totalCards - 1;
+    return FutureBuilder<List<Movement>>(
+      future: _movementsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Practice')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
+        final movements = snapshot.data ?? [];
+        if (movements.isEmpty || _totalCards == 0) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Practice')),
+            body: const Center(child: Text('No movements found')),
+          );
+        }
+
+        final colors = Theme.of(context).colorScheme;
+        final movement = movements[_currentCardIndex];
+        final isLastCard = _currentCardIndex >= _totalCards - 1;
+        
+        return _buildPlaybackScreen(context, colors, movement, isLastCard, movements);
+      },
+    );
+  }
+
+  Widget _buildPlaybackScreen(
+    BuildContext context,
+    ColorScheme colors,
+    Movement movement,
+    bool isLastCard,
+    List<Movement> movements,
+  ) {
     return Scaffold(
       backgroundColor: colors.primary.withOpacity(0.05),
       body: SafeArea(
@@ -113,7 +148,10 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
               children: [
                 // Top Row - Close Button & Counter
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -137,7 +175,9 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                       // Counter
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 8),
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).scaffoldBackgroundColor,
                           borderRadius: BorderRadius.circular(20),
@@ -150,7 +190,8 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                         ),
                         child: Text(
                           '${_currentCardIndex + 1} / $_totalCards',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: colors.primary,
                               ),
@@ -183,15 +224,13 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                           // Top - Movement Name
                           Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             child: Text(
                               movement.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w700),
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -219,12 +258,13 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                                 // Description
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
+                                    horizontal: 16,
+                                  ),
                                   child: Text(
                                     movement.description,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
@@ -243,25 +283,21 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                               ),
                             ),
                             child: Column(
-                              children: [
-                                Text(
-                                  'Duration',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall,
-                                ),
-                                Text(
-                                  '${movement.durationSeconds}s',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        color: colors.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                ),
-                              ],
-                            ),
+                               children: [
+                                 Text(
+                                   'Duration',
+                                   style: Theme.of(context).textTheme.labelSmall,
+                                 ),
+                                 Text(
+                                   '${movement.durationSeconds * _durationMultiplier}s',
+                                   style: Theme.of(context).textTheme.titleMedium
+                                       ?.copyWith(
+                                         color: colors.primary,
+                                         fontWeight: FontWeight.w600,
+                                       ),
+                                 ),
+                               ],
+                             ),
                           ),
                         ],
                       ),
@@ -271,7 +307,10 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
 
                 // Bottom Row - Map Button & Next/Done Button
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -280,7 +319,9 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                         onTap: _toggleMovementMap,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: Theme.of(context).scaffoldBackgroundColor,
                             borderRadius: BorderRadius.circular(12),
@@ -294,17 +335,11 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.map,
-                                color: colors.primary,
-                                size: 20,
-                              ),
+                              Icon(Icons.map, color: colors.primary, size: 20),
                               const SizedBox(width: 8),
                               Text(
                                 'Map',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
+                                style: Theme.of(context).textTheme.labelMedium
                                     ?.copyWith(
                                       color: colors.primary,
                                       fontWeight: FontWeight.w600,
@@ -320,7 +355,9 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                         onTap: isLastCard ? _closeScreen : _nextCard,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: colors.primary,
                             borderRadius: BorderRadius.circular(12),
@@ -371,10 +408,10 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                           child: GridView.builder(
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              mainAxisSpacing: 12,
-                              crossAxisSpacing: 12,
-                            ),
+                                  crossAxisCount: 3,
+                                  mainAxisSpacing: 12,
+                                  crossAxisSpacing: 12,
+                                ),
                             itemCount: movements.length,
                             itemBuilder: (context, index) {
                               final isActive = index == _currentCardIndex;
@@ -396,8 +433,7 @@ class _PracticePlaybackScreenState extends State<PracticePlaybackScreen> {
                                     ),
                                   ),
                                   child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
                                         '${index + 1}',

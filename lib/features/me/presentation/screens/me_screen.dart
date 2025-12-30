@@ -16,9 +16,7 @@ class _MeScreenState extends State<MeScreen> {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Me'),
-      ),
+      appBar: AppBar(title: const Text('Me')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -120,9 +118,9 @@ class _MeScreenState extends State<MeScreen> {
                     const SizedBox(height: 4),
                     Text(
                       'Level 5',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: colors.primary,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: colors.primary),
                     ),
                   ],
                 ),
@@ -164,15 +162,12 @@ class _MeScreenState extends State<MeScreen> {
       children: [
         Text(
           value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(title, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }
@@ -200,7 +195,9 @@ class _MeScreenState extends State<MeScreen> {
                 side: BorderSide(color: colors.outline.withOpacity(0.2)),
               ),
               child: Icon(
-                index < 5 ? Icons.star : Icons.star_border, // Example locked/unlocked
+                index < 5
+                    ? Icons.star
+                    : Icons.star_border, // Example locked/unlocked
                 color: index < 5 ? colors.primary : colors.outline,
                 size: 32,
               ),
@@ -214,9 +211,9 @@ class _MeScreenState extends State<MeScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 
@@ -232,9 +229,7 @@ class _MeScreenState extends State<MeScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colors.outline.withOpacity(0.2),
-        ),
+        border: Border.all(color: colors.outline.withOpacity(0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -245,15 +240,9 @@ class _MeScreenState extends State<MeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
+                  Text(title, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
@@ -279,44 +268,28 @@ class _MeScreenState extends State<MeScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colors.outline.withOpacity(0.2),
-        ),
+        border: Border.all(color: colors.outline.withOpacity(0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: colors.primary,
-              size: 24,
-            ),
+            Icon(icon, color: colors.primary, size: 24),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
+                  Text(title, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: colors.outline,
-            ),
+            Icon(Icons.chevron_right, color: colors.outline),
           ],
         ),
       ),
     );
   }
 }
-

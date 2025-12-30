@@ -52,13 +52,7 @@ class WorkoutCard extends StatelessWidget {
                     top: Radius.circular(16),
                   ),
                 ),
-                child: Center(
-                  child: Icon(
-                    icon,
-                    color: iColor,
-                    size: 40,
-                  ),
-                ),
+                child: Center(child: Icon(icon, color: iColor, size: 40)),
               ),
             ),
             // Text
@@ -70,17 +64,17 @@ class WorkoutCard extends StatelessWidget {
                   Text(
                     name,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     duration,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colors.outline,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: colors.outline),
                   ),
                 ],
               ),

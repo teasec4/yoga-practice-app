@@ -4,10 +4,7 @@ import 'package:go_router/go_router.dart';
 class MainShell extends StatelessWidget {
   final Widget child;
 
-  const MainShell({
-    required this.child,
-    super.key,
-  });
+  const MainShell({required this.child, super.key});
 
   int _getSelectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -39,21 +36,11 @@ class MainShell extends StatelessWidget {
         currentIndex: _getSelectedIndex(context),
         onTap: (index) => _handleTabChange(index, context),
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'Practice',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore),
-            label: 'Explore',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Me',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Practice'),
+          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
         ],
       ),
     );
   }
 }
-

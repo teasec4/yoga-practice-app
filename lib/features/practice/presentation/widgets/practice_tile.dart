@@ -5,11 +5,7 @@ class PracticeTile extends StatelessWidget {
   final Practice practice;
   final VoidCallback? onTap;
 
-  const PracticeTile({
-    required this.practice,
-    this.onTap,
-    super.key,
-  });
+  const PracticeTile({required this.practice, this.onTap, super.key});
 
   IconData _getIconData(IconType type) {
     switch (type) {
@@ -68,9 +64,7 @@ class PracticeTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.outline.withOpacity(0.15),
-        ),
+        border: Border.all(color: colors.outline.withOpacity(0.15)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -105,9 +99,8 @@ class PracticeTile extends StatelessWidget {
                         children: [
                           Text(
                             practice.title,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -131,17 +124,12 @@ class PracticeTile extends StatelessWidget {
                     // Duration
                     Row(
                       children: [
-                        Icon(
-                          Icons.schedule,
-                          size: 16,
-                          color: colors.outline,
-                        ),
+                        Icon(Icons.schedule, size: 16, color: colors.outline),
                         const SizedBox(width: 4),
                         Text(
                           '${practice.durationMinutes} min',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: colors.outline,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: colors.outline),
                         ),
                       ],
                     ),
@@ -167,20 +155,19 @@ class PracticeTile extends StatelessWidget {
                     ),
                     const Spacer(),
 
-                    // Completed Count
+                    // Pose Count
                     Row(
                       children: [
                         Icon(
-                          Icons.people_outline,
+                          Icons.accessibility,
                           size: 16,
                           color: colors.outline,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${practice.completedCount}',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: colors.outline,
-                          ),
+                          '${practice.poseCount}',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: colors.outline),
                         ),
                       ],
                     ),

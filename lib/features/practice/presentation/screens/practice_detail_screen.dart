@@ -9,10 +9,7 @@ import 'package:yoga_coach/features/practice/data/models/custom_practice_storage
 class PracticeDetailScreen extends StatelessWidget {
   final String practiceId;
 
-  const PracticeDetailScreen({
-    required this.practiceId,
-    super.key,
-  });
+  const PracticeDetailScreen({required this.practiceId, super.key});
 
   dynamic _getPracticeData(String id) {
     // Try standard practices first
@@ -125,7 +122,7 @@ class PracticeDetailScreen extends StatelessWidget {
     final data = _getPracticeData(practiceId);
     final isCustom = _isCustomPractice(practiceId);
     final colors = Theme.of(context).colorScheme;
-    
+
     // Get difficulty color (only for standard practices)
     Color difficultyColor = const Color(0xFF8BC98D);
     if (data is Practice) {
@@ -137,14 +134,13 @@ class PracticeDetailScreen extends StatelessWidget {
         title: const Text('Practice Details'),
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarBrightness:
-              Theme.of(context).brightness == Brightness.light
-                  ? Brightness.light
-                  : Brightness.dark,
+          statusBarBrightness: Theme.of(context).brightness == Brightness.light
+              ? Brightness.light
+              : Brightness.dark,
           statusBarIconBrightness:
               Theme.of(context).brightness == Brightness.light
-                  ? Brightness.dark
-                  : Brightness.light,
+              ? Brightness.dark
+              : Brightness.light,
         ),
       ),
       body: Stack(
@@ -154,7 +150,7 @@ class PracticeDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
-              
+
                 children: [
                   // Header Card
                   Container(
@@ -181,9 +177,7 @@ class PracticeDetailScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           _getTitle(data),
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
+                          style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                           textAlign: TextAlign.center,
                         ),
@@ -200,9 +194,7 @@ class PracticeDetailScreen extends StatelessWidget {
                             ),
                             child: Text(
                               _getDifficultyLabel(_getDifficulty(data)!),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelMedium
+                              style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(
                                     color: difficultyColor,
                                     fontWeight: FontWeight.w600,
@@ -221,9 +213,7 @@ class PracticeDetailScreen extends StatelessWidget {
                             ),
                             child: Text(
                               'Custom',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelMedium
+                              style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(
                                     color: colors.primary,
                                     fontWeight: FontWeight.w600,
@@ -265,8 +255,8 @@ class PracticeDetailScreen extends StatelessWidget {
                   Text(
                     'About this lesson',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -291,16 +281,11 @@ class PracticeDetailScreen extends StatelessWidget {
                         children: [
                           Column(
                             children: [
-                              Icon(
-                                Icons.people_outline,
-                                color: colors.primary,
-                              ),
+                              Icon(Icons.people_outline, color: colors.primary),
                               const SizedBox(height: 8),
                               Text(
                                 '${_getCompletedCount(data)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
+                                style: Theme.of(context).textTheme.titleSmall
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               Text(
@@ -328,9 +313,7 @@ class PracticeDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
                 border: Border(
-                  top: BorderSide(
-                    color: colors.outline.withOpacity(0.1),
-                  ),
+                  top: BorderSide(color: colors.outline.withOpacity(0.1)),
                 ),
               ),
               child: SizedBox(
@@ -338,7 +321,9 @@ class PracticeDetailScreen extends StatelessWidget {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () {
-                    context.push('/practice/${practiceId}/playback');
+                    context.push(
+                      '/practice/${practiceId}/playback',
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,
@@ -354,11 +339,11 @@ class PracticeDetailScreen extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Start Practice',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ],
                   ),
@@ -383,9 +368,7 @@ class PracticeDetailScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colors.outline.withOpacity(0.15),
-        ),
+        border: Border.all(color: colors.outline.withOpacity(0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,18 +377,15 @@ class PracticeDetailScreen extends StatelessWidget {
             children: [
               Icon(icon, color: colors.primary, size: 20),
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
+              Text(label, style: Theme.of(context).textTheme.labelSmall),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),

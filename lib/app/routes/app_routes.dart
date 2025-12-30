@@ -4,6 +4,8 @@ import 'package:yoga_coach/features/practice/presentation/screens/practice_scree
 import 'package:yoga_coach/features/practice/presentation/screens/practice_detail_screen.dart';
 import 'package:yoga_coach/features/practice/presentation/screens/practice_playback_screen.dart';
 import 'package:yoga_coach/features/practice/presentation/screens/create_custom_practice_screen.dart';
+import 'package:yoga_coach/features/practice/presentation/screens/custom_practice_detail_screen.dart';
+import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
 import 'package:yoga_coach/features/statistics/presentation/screens/statistics_screen.dart';
 import 'package:yoga_coach/features/me/presentation/screens/me_screen.dart';
 
@@ -18,19 +20,46 @@ final goRouter = GoRouter(
         GoRoute(
           path: '/practice',
           name: 'practice',
-          pageBuilder: (context, state) => NoTransitionPage(
-            child: const PracticeScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              NoTransitionPage(child: const PracticeScreen()),
           routes: [
             GoRoute(
               path: 'create',
               name: 'createPractice',
               pageBuilder: (context, state) {
-                return const NoTransitionPage(
-                  child: CreateCustomPracticeScreen(),
+                final editingPractice = state.extra as CustomPractice?;
+                return NoTransitionPage(
+                  child: CreateCustomPracticeScreen(editingPractice: editingPractice),
                 );
               },
             ),
+            // Custom practice detail route
+            GoRoute(
+              path: 'custom/:id',
+              name: 'customPracticeDetail',
+              pageBuilder: (context, state) {
+                final practiceId = state.pathParameters['id'] ?? '';
+                return NoTransitionPage(
+                  child: CustomPracticeDetailScreen(practiceId: practiceId),
+                );
+              },
+              routes: [
+                GoRoute(
+                   path: 'playback',
+                   name: 'customPracticePlayback',
+                   pageBuilder: (context, state) {
+                     final practiceId = state.pathParameters['id'] ?? '';
+                     return NoTransitionPage(
+                       child: PracticePlaybackScreen(
+                         practiceId: practiceId,
+                         isCustom: true,
+                       ),
+                     );
+                   },
+                 ),
+              ],
+            ),
+            // Standard practice detail route
             GoRoute(
               path: ':id',
               name: 'practiceDetail',
@@ -42,15 +71,19 @@ final goRouter = GoRouter(
               },
               routes: [
                 GoRoute(
-                  path: 'playback',
-                  name: 'practicePlayback',
-                  pageBuilder: (context, state) {
-                    final practiceId = state.pathParameters['id'] ?? '';
-                    return NoTransitionPage(
-                      child: PracticePlaybackScreen(practiceId: practiceId),
-                    );
-                  },
-                ),
+                   path: 'playback',
+                   name: 'practicePlayback',
+                   pageBuilder: (context, state) {
+                     final practiceId = state.pathParameters['id'] ?? '';
+                     final isCustom = state.uri.queryParameters['custom'] == 'true';
+                     return NoTransitionPage(
+                       child: PracticePlaybackScreen(
+                         practiceId: practiceId,
+                         isCustom: isCustom,
+                       ),
+                     );
+                   },
+                 ),
               ],
             ),
           ],
@@ -58,16 +91,14 @@ final goRouter = GoRouter(
         GoRoute(
           path: '/statistics',
           name: 'statistics',
-          pageBuilder: (context, state) => NoTransitionPage(
-            child: const StatisticsScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              NoTransitionPage(child: const StatisticsScreen()),
         ),
         GoRoute(
           path: '/me',
           name: 'me',
-          pageBuilder: (context, state) => NoTransitionPage(
-            child: const MeScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              NoTransitionPage(child: const MeScreen()),
         ),
       ],
     ),
