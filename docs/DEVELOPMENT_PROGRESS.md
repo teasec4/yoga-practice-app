@@ -1,5 +1,44 @@
 # Yoga Coach - Development Progress
 
+## Session 4: Simplification & Navigation Fixes (Dec 30, 2025)
+
+### ✅ Completed
+
+#### Playback Screen Refactor
+- [x] **Removed all animation controllers** - SimplifiedLayout with instant renders
+- [x] Removed 5 animation controllers (_card, _enter, _map, _timer, _close)
+- [x] Removed related animations and lifecycle complexity
+- [x] Eliminated deactivate() and complex mounted checks
+- [x] Fixed "Each child must be laid out exactly once" error (was from conditional renders)
+
+#### Navigation Logic Simplified
+- [x] **Removed popUntil logic** from MainShell - too complex
+- [x] Kept simple goNamed() for tab switching
+- [x] Navigator.pop() now properly returns to detail screen from playback
+- [x] No more empty screen when clicking close button
+- [x] Clean routing: /practice → /practice/:id → /practice/:id/playback
+
+#### Movement Map Modal
+- [x] Replaced conditional Stack children with simple if statement in build
+- [x] Modal now properly overlays without layout conflicts
+- [x] Quick tap to select movements and return to playback
+
+#### Practice Screen Simplified
+- [x] **Removed My Practice tab** - kept only default practices
+- [x] Removed PracticeType enum
+- [x] Removed segment switcher UI
+- [x] Removed _myPracticeIds filtering logic
+- [x] Changed from StatefulWidget to StatelessWidget
+- [x] Simple ListView.builder with all 10 default practices
+
+#### Code Reduction
+- [x] Removed 200+ lines of animation code
+- [x] Removed 50+ lines of My Practice logic
+- [x] Simpler state management (only track index and map visibility)
+- [x] More maintainable and less error-prone
+
+---
+
 ## Session 3: Playback UI & Explore Feature (Dec 29, 2025)
 
 ### ✅ Completed
@@ -269,13 +308,23 @@ yoga_coach/
 
 ---
 
+## 🎯 Known Issues - RESOLVED ✅
+
+**Session 4 Fixed**:
+- ✅ "Each child must be laid out exactly once" error
+- ✅ "GlobalKey used multiple times" error
+- ✅ Tab switching from playback screen
+- ✅ Empty screen after closing playback
+- ✅ Navigation routing logic
+
 ## 🎯 Upcoming Priority
 
-1. **High**: Implement "Me" tab with gamification
-2. **High**: Add floating button to "My Practice" for lesson creation
-3. **High**: Create Add Lesson form
-4. **Medium**: Implement feature blocking system
-5. **Medium**: Expand Explore with search/filter
+1. **High**: Add timer to playback (simple countdown)
+2. **High**: Implement "Me" tab with gamification
+3. **High**: Add floating button to "My Practice" for lesson creation
+4. **High**: Create Add Lesson form
+5. **Medium**: Implement feature blocking system
+6. **Medium**: Expand Explore with search/filter
 
 ---
 

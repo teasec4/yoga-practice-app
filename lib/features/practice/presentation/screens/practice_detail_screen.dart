@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yoga_coach/features/practice/domain/entities/practice.dart';
+import 'package:yoga_coach/features/practice/domain/entities/custom_practice.dart';
 import 'package:yoga_coach/features/practice/data/models/practice_model.dart';
+import 'package:yoga_coach/features/practice/data/models/custom_practice_storage.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
   final String practiceId;
@@ -12,11 +14,63 @@ class PracticeDetailScreen extends StatelessWidget {
     super.key,
   });
 
-  Practice _getPractice(String id) {
-    return mockPractices.firstWhere(
-      (practice) => practice.id == id,
-      orElse: () => mockPractices.first,
-    );
+  dynamic _getPracticeData(String id) {
+    // Try standard practices first
+    try {
+      return mockPractices.firstWhere((p) => p.id == id);
+    } catch (e) {
+      // Try custom practices
+      final storage = CustomPracticeStorage();
+      final custom = storage.getPractice(id);
+      if (custom != null) {
+        return custom;
+      }
+      // Fallback
+      return mockPractices.first;
+    }
+  }
+
+  bool _isCustomPractice(String id) {
+    final storage = CustomPracticeStorage();
+    return storage.getPractice(id) != null;
+  }
+
+  String _getTitle(dynamic data) {
+    if (data is Practice) return data.title;
+    if (data is CustomPractice) return data.title;
+    return '';
+  }
+
+  int _getDurationMinutes(dynamic data) {
+    if (data is Practice) return data.durationMinutes;
+    if (data is CustomPractice) return data.durationMinutes;
+    return 0;
+  }
+
+  int _getPoseCount(dynamic data) {
+    if (data is Practice) return data.poseCount;
+    if (data is CustomPractice) return data.poseCount;
+    return 0;
+  }
+
+  String _getDescription(dynamic data) {
+    if (data is Practice) return data.fullDescription;
+    return 'Custom practice created on ${(data as CustomPractice).createdAt.toString().split('.')[0]}';
+  }
+
+  int _getCompletedCount(dynamic data) {
+    if (data is Practice) return data.completedCount;
+    return 0;
+  }
+
+  IconType _getIconType(dynamic data) {
+    if (data is Practice) return data.iconType;
+    return IconType.lotus; // Default for custom
+  }
+
+  DifficultyLevel? _getDifficulty(dynamic data) {
+    if (data is Practice) return data.difficulty;
+    return null;
   }
 
   IconData _getIconData(IconType type) {
@@ -68,9 +122,15 @@ class PracticeDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final practice = _getPractice(practiceId);
+    final data = _getPracticeData(practiceId);
+    final isCustom = _isCustomPractice(practiceId);
     final colors = Theme.of(context).colorScheme;
-    final difficultyColor = _getDifficultyColor(practice.difficulty);
+    
+    // Get difficulty color (only for standard practices)
+    Color difficultyColor = const Color(0xFF8BC98D);
+    if (data is Practice) {
+      difficultyColor = _getDifficultyColor(data.difficulty);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -113,14 +173,14 @@ class PracticeDetailScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Icon(
-                            _getIconData(practice.iconType),
+                            _getIconData(_getIconType(data)),
                             color: colors.primary,
                             size: 48,
                           ),
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          practice.title,
+                          _getTitle(data),
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall
@@ -128,26 +188,48 @@ class PracticeDetailScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                        if (_getDifficulty(data) != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: difficultyColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _getDifficultyLabel(_getDifficulty(data)!),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(
+                                    color: difficultyColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.primary.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Custom',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(
+                                    color: colors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
                           ),
-                          decoration: BoxDecoration(
-                            color: difficultyColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _getDifficultyLabel(practice.difficulty),
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
-                                ?.copyWith(
-                                  color: difficultyColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -161,7 +243,7 @@ class PracticeDetailScreen extends StatelessWidget {
                           context: context,
                           icon: Icons.schedule,
                           label: 'Duration',
-                          value: '${practice.durationMinutes} min',
+                          value: '${_getDurationMinutes(data)} min',
                           colors: colors,
                         ),
                       ),
@@ -171,7 +253,7 @@ class PracticeDetailScreen extends StatelessWidget {
                           context: context,
                           icon: Icons.accessibility,
                           label: 'Poses',
-                          value: '${practice.poseCount}',
+                          value: '${_getPoseCount(data)}',
                           colors: colors,
                         ),
                       ),
@@ -188,47 +270,48 @@ class PracticeDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    practice.fullDescription,
+                    _getDescription(data),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 28),
 
-                  // Stats
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: colors.outline.withOpacity(0.15),
+                  // Stats (only for standard practices)
+                  if (_getCompletedCount(data) > 0)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colors.outline.withOpacity(0.15),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Column(
+                            children: [
+                              Icon(
+                                Icons.people_outline,
+                                color: colors.primary,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${_getCompletedCount(data)}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                'Completed',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Column(
-                          children: [
-                            Icon(
-                              Icons.people_outline,
-                              color: colors.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${practice.completedCount}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            Text(
-                              'Completed',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -255,7 +338,7 @@ class PracticeDetailScreen extends StatelessWidget {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () {
-                    context.push('/practice/${practice.id}/playback');
+                    context.push('/practice/${practiceId}/playback');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,

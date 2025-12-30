@@ -17,25 +17,27 @@ class MainShell extends StatelessWidget {
     return 0;
   }
 
+  void _handleTabChange(int index, BuildContext context) {
+    switch (index) {
+      case 0:
+        context.goNamed('practice');
+        break;
+      case 1:
+        context.goNamed('statistics');
+        break;
+      case 2:
+        context.goNamed('me');
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _getSelectedIndex(context),
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.goNamed('practice');
-              break;
-            case 1:
-              context.goNamed('statistics');
-              break;
-            case 2:
-              context.goNamed('me');
-              break;
-          }
-        },
+        onTap: (index) => _handleTabChange(index, context),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.school),
